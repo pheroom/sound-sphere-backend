@@ -6,8 +6,12 @@ import * as process from "node:process";
 import {User} from "./users/users.model";
 import {ArtistsModule} from "./artists/artists.module";
 import {Artist} from "./artists/artists.model";
-import {UserBlockedArtists} from "./artists/user-blocked-artists.model";
+import {UserBlockedArtists} from "./users/user-blocked-artists.model";
 import { AuthModule } from './auth/auth.module';
+import { FilesModule } from './files/files.module';
+import {ServeStaticModule} from "@nestjs/serve-static";
+import * as path from 'path'
+import {ArtistsAuthModule} from "./artists-auth/artists-auth.module";
 
 @Module({
     controllers: [],
@@ -15,6 +19,9 @@ import { AuthModule } from './auth/auth.module';
     imports: [
         ConfigModule.forRoot({
             envFilePath: `.${process.env.NODE_ENV}.env`,
+        }),
+        ServeStaticModule.forRoot({
+            rootPath: path.resolve(__dirname, 'static')
         }),
         SequelizeModule.forRoot({
             dialect: 'postgres',
@@ -27,8 +34,10 @@ import { AuthModule } from './auth/auth.module';
             models: [User, Artist, UserBlockedArtists]
         }),
         UsersModule,
-        ArtistsModule,
         AuthModule,
+        ArtistsModule,
+        ArtistsAuthModule,
+        FilesModule,
     ],
 })
 export class AppModule {}

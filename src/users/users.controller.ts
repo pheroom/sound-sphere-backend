@@ -1,21 +1,23 @@
-import {Body, Controller, Get, Post, UseGuards, UsePipes, ValidationPipe} from '@nestjs/common';
+import {
+    Body,
+    Controller, Delete,
+    Get, Param, Patch, Post,
+    Req,
+    UploadedFile,
+    UseGuards,
+    UseInterceptors,
+} from '@nestjs/common';
 import {UsersService} from "./users.service";
-import {CreateUserDto} from "./dto/create-user.dto";
-import {ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {ApiOperation, ApiResponse} from "@nestjs/swagger";
 import {User} from "./users.model";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
+import {UpdateUserDto} from "./dto/update-user.dto";
+import {FileInterceptor} from "@nestjs/platform-express";
+import {Artist} from "../artists/artists.model";
 
 @Controller('users')
 export class UsersController {
     constructor(private readonly usersService: UsersService) {}
-
-    @ApiOperation({summary: 'Create a new user'})
-    @ApiResponse({status: 200, type: User})
-    @UsePipes(new ValidationPipe())
-    @Post()
-    create(@Body() userDto: CreateUserDto) {
-        return this.usersService.createUser(userDto)
-    }
 
     @ApiOperation({summary: 'Get all users'})
     @ApiResponse({status: 200, type: [User]})
@@ -23,5 +25,46 @@ export class UsersController {
     @Get()
     getAll() {
         return this.usersService.getAllUsers()
+    }
+
+    @ApiOperation({summary: 'Get user profile by username'})
+    @ApiResponse({status: 200, type: User})
+    @UseGuards(JwtAuthGuard)
+    @Get('get-one-by-username/:username')
+    getUserByUsername(@Param('username') username: string) {
+        return this.usersService.getUserByUsername(username)
+    }
+
+    @ApiOperation({summary: 'Update user profile'})
+    @ApiResponse({status: 200, type: User})
+    @UseGuards(JwtAuthGuard)
+    @Patch()
+    @UseInterceptors(FileInterceptor('image'))
+    update(@Req() req, @Body() dto: UpdateUserDto, @UploadedFile() image){
+        return this.usersService.updateUser(req.user, dto, image)
+    }
+
+    @ApiOperation({summary: 'Block artist'})
+    @ApiResponse({status: 200})
+    @UseGuards(JwtAuthGuard)
+    @Post('block-artists/:artistId')
+    blockArtist(@Req() req, @Param('artistId') artistId: string){
+        return this.usersService.blockArtist(+req.user.id, +artistId)
+    }
+
+    @ApiOperation({summary: 'Unlock artist'})
+    @ApiResponse({status: 200})
+    @UseGuards(JwtAuthGuard)
+    @Delete('block-artists/:artistId')
+    unblockArtist(@Req() req, @Param('artistId') artistId: string){
+        return this.usersService.unblockArtist(+req.user.id, +artistId)
+    }
+
+    @ApiOperation({summary: 'Get blocked artist for auth user'})
+    @ApiResponse({status: 200, type: [Artist]})
+    @UseGuards(JwtAuthGuard)
+    @Get('block-artists')
+    getBlockedArtist(@Req() req){
+        return this.usersService.getBlockedArtistsByUserId(+req.user.id)
     }
 }

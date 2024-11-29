@@ -3,7 +3,7 @@ import {Observable} from "rxjs";
 import {JwtService} from "@nestjs/jwt";
 
 @Injectable()
-export class JwtAuthGuard implements CanActivate {
+export class JwtArtistsAuthGuard implements CanActivate {
     constructor(private jwtService: JwtService) {
     }
 
@@ -16,9 +16,9 @@ export class JwtAuthGuard implements CanActivate {
             if(tokenType !== "Bearer" || !token) {
                 throw new Error();
             }
-            const user = this.jwtService.verify(token);
-            req.user = user;
-            return user;
+            const artist = this.jwtService.verify(token);
+            req.artist = artist;
+            return artist;
         } catch (e){
             throw new UnauthorizedException("Unauthorized");
         }

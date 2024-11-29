@@ -1,7 +1,7 @@
 import {BelongsToMany, Column, DataType, Model, Table} from "sequelize-typescript";
 import {ApiProperty} from "@nestjs/swagger";
 import {Artist} from "../artists/artists.model";
-import {UserBlockedArtists} from "../artists/user-blocked-artists.model";
+import {UserBlockedArtists} from "./user-blocked-artists.model";
 
 interface UserCreationAttrs{
     username:string;

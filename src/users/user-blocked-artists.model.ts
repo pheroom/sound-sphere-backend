@@ -1,7 +1,7 @@
 import {Column, DataType, ForeignKey, Model, Table} from "sequelize-typescript";
 import {ApiProperty} from "@nestjs/swagger";
-import {User} from "../users/users.model";
-import {Artist} from "./artists.model";
+import {User} from "./users.model";
+import {Artist} from "../artists/artists.model";
 
 @Table({tableName: 'user_blocked_artists', updatedAt: false})
 export class UserBlockedArtists extends Model<UserBlockedArtists> {

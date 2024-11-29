@@ -18,7 +18,7 @@ export class AuthService {
     async registration(userDto: CreateUserDto) {
         const candidate = await this.userService.getUserByUsername(userDto.username);
         if (candidate) {
-            throw new HttpException("User already exists", HttpStatus.BAD_REQUEST);
+            throw new HttpException("User with this username already exists", HttpStatus.BAD_REQUEST);
         }
         const hashPassword = await bcrypt.hash(userDto.password, 6);
         const user = await this.userService.createUser({...userDto, password: hashPassword});
@@ -26,7 +26,7 @@ export class AuthService {
     }
 
     private async generateToken(user: User){
-        const payload = {username: user.username, password: user.password};
+        const payload = {username: user.username, id: user.id};
         return {
             token: this.jwtService.sign(payload)
         }
