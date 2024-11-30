@@ -2,6 +2,8 @@ import {BelongsToMany, Column, DataType, Model, Table} from "sequelize-typescrip
 import {ApiProperty} from "@nestjs/swagger";
 import {User} from "../users/users.model";
 import {UserBlockedArtists} from "../users/user-blocked-artists.model";
+import {Album} from "../albums/albums.model";
+import {AlbumArtists} from "../albums/album-artists.model";
 
 interface ArtistCreationAttrs{
     username:string;
@@ -37,4 +39,7 @@ export class Artist extends Model<Artist, ArtistCreationAttrs> {
 
     @BelongsToMany(() => User, () => UserBlockedArtists)
     usersBlocks: User[]
+
+    @BelongsToMany(() => Album, () => AlbumArtists)
+    albums: User[]
 }

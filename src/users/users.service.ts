@@ -54,7 +54,7 @@ export class UsersService {
     }
 
     async blockArtist(userId: number, artistId: number){
-        const user = await this.getUserById(userId);
+        const user = await this.userRepository.findByPk(userId);
         const artist = await this.artistsService.getArtistById(artistId);
         if (!artist || !user) {
             throw new HttpException('Artist not found', HttpStatus.NOT_FOUND);
@@ -65,7 +65,7 @@ export class UsersService {
     }
 
     async unblockArtist(userId: number, artistId: number){
-        const user = await this.getUserById(userId);
+        const user = await this.userRepository.findByPk(userId);
         const artist = await this.artistsService.getArtistById(artistId);
         if (!artist || !user) {
             throw new HttpException('Artist not found', HttpStatus.NOT_FOUND);
@@ -80,7 +80,7 @@ export class UsersService {
     async getBlockedArtistsByUserId(id: number){
         // const user = await this.userRepository.findOne({where: {id}, include: [Artist]});
         // const res = await this.userBlockedArtistsRepository.findAll({where: {userId: id}});
-        const user = await User.findByPk(id, {
+        const user = await this.userRepository.findByPk(id, {
             include: [{
                 model: Artist,
                 through: {

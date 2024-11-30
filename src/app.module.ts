@@ -12,6 +12,9 @@ import { FilesModule } from './files/files.module';
 import {ServeStaticModule} from "@nestjs/serve-static";
 import * as path from 'path'
 import {ArtistsAuthModule} from "./artists-auth/artists-auth.module";
+import { AlbumsModule } from './albums/albums.module';
+import {Album} from "./albums/albums.model";
+import {AlbumArtists} from "./albums/album-artists.model";
 
 @Module({
     controllers: [],
@@ -31,13 +34,14 @@ import {ArtistsAuthModule} from "./artists-auth/artists-auth.module";
             password: process.env.POSTGRES_PASSWORD,
             database: process.env.POSTGRES_DB,
             autoLoadModels: true,
-            models: [User, Artist, UserBlockedArtists]
+            models: [User, Artist, UserBlockedArtists, Album, AlbumArtists]
         }),
         UsersModule,
         AuthModule,
         ArtistsModule,
         ArtistsAuthModule,
         FilesModule,
+        AlbumsModule,
     ],
 })
 export class AppModule {}

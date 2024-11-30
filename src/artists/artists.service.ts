@@ -4,6 +4,7 @@ import {CreateArtistDto} from "./dto/create-artist.dto";
 import {Artist} from "./artists.model";
 import {UpdateArtistDto} from "./dto/update-artist.dto";
 import {FilesService} from "../files/files.service";
+import {Album} from "../albums/albums.model";
 
 @Injectable()
 export class ArtistsService {
@@ -46,5 +47,17 @@ export class ArtistsService {
     async getArtistByUsername(username: string) {
         const artist = await this.artistRepository.findOne({ where: {username} });
         return artist
+    }
+
+    async getAlbumsByArtistId(artistId: number) {
+        const artist = await this.artistRepository.findByPk(artistId, {
+            include: {
+                model: Album,
+                through: {
+                    attributes: []
+                }
+            }
+        })
+        return artist.albums
     }
 }
