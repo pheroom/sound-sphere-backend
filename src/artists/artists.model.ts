@@ -1,4 +1,4 @@
-import {BelongsToMany, Column, DataType, Model, Table} from "sequelize-typescript";
+import {BelongsToMany, Column, DataType, DefaultScope, Model, Scopes, Table} from "sequelize-typescript";
 import {ApiProperty} from "@nestjs/swagger";
 import {User} from "../users/users.model";
 import {UserBlockedArtists} from "../users/user-blocked-artists.model";
@@ -11,6 +11,9 @@ interface ArtistCreationAttrs{
     password:string;
 }
 
+@DefaultScope(() => ({
+    attributes: { exclude: ['password'] }
+}))
 @Table({tableName: 'artists'})
 export class Artist extends Model<Artist, ArtistCreationAttrs> {
     @ApiProperty({example: 1})

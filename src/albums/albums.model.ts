@@ -1,7 +1,9 @@
-import {BelongsToMany, Column, DataType, Model, Table} from "sequelize-typescript";
+import {BelongsToMany, Column, DataType, Model, Scopes, Table} from "sequelize-typescript";
 import {ApiProperty} from "@nestjs/swagger";
 import {Artist} from "../artists/artists.model";
 import {AlbumArtists} from "./album-artists.model";
+import {UserFavouriteAlbums} from "../users/user-favourite-albums.model";
+import {User} from "../users/users.model";
 
 interface AlbumCreationAttrs{
     name:string;
@@ -28,4 +30,7 @@ export class Album extends Model<Album, AlbumCreationAttrs> {
 
     @BelongsToMany(() => Artist, () => AlbumArtists)
     artists: Artist[]
+
+    @BelongsToMany(() => User, () => UserFavouriteAlbums)
+    favouriteOfUsers: User[]
 }

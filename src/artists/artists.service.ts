@@ -53,9 +53,7 @@ export class ArtistsService {
         const artist = await this.artistRepository.findByPk(artistId, {
             include: {
                 model: Album,
-                through: {
-                    attributes: []
-                }
+                through: {attributes: []}
             }
         })
         return artist.albums

@@ -32,12 +32,11 @@ export class AlbumsController {
         return this.albumService.create(albumDto, +req.artist.id);
     }
 
-    @ApiOperation({summary: 'Get album feed'})
+    @ApiOperation({summary: 'Get all album'})
     @ApiResponse({status: 200, type: [Album]})
-    @UseGuards(JwtAuthGuard)
     @Get('all')
-    getAll(@Req() req) {
-        return this.albumService.getAllAlbums(+req.user.id);
+    getAll() {
+        return this.albumService.getAllAlbums();
     }
 
     @ApiOperation({summary: 'Get album with tracks'})

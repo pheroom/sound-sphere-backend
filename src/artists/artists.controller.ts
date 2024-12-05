@@ -22,7 +22,7 @@ export class ArtistsController {
     @ApiOperation({summary: 'Get artist profile by username'})
     @ApiResponse({status: 200, type: Artist})
     @UseGuards(JwtAuthGuard)
-    @Get(':username')
+    @Get('get-one-by-username/:username')
     getArtistByUsername(@Param('username') username: string) {
         return this.artistsService.getArtistByUsername(username)
     }

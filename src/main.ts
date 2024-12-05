@@ -1,7 +1,7 @@
 import * as process from "node:process";
 import {NestFactory} from "@nestjs/core";
 import {AppModule} from "./app.module";
-import {DocumentBuilder, SwaggerModule} from "@nestjs/swagger";
+    import {DocumentBuilder, SwaggerModule} from "@nestjs/swagger";
 import {BadRequestException, ValidationPipe} from "@nestjs/common";
 
 async function start(){
@@ -11,7 +11,9 @@ async function start(){
     const config = new DocumentBuilder()
         .setTitle("Sound Sphere API")
         .setVersion('1.0.0')
-        .setDescription('Source code: https://github.com/pheroom/sound-sphere-backend')
+        .setDescription('API built with the Node/Nest and PostgreSQL. Supports jwt authentication system, manage albums, tracks and playlists.')
+        .setContact('Source code', 'https://github.com/pheroom/sound-sphere-backend', '')
+        .addBearerAuth()
         .build()
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('/api/docs', app, document);

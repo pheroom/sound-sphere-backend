@@ -15,6 +15,7 @@ import {ArtistsAuthModule} from "./artists-auth/artists-auth.module";
 import { AlbumsModule } from './albums/albums.module';
 import {Album} from "./albums/albums.model";
 import {AlbumArtists} from "./albums/album-artists.model";
+import {UserFavouriteAlbums} from "./users/user-favourite-albums.model";
 
 @Module({
     controllers: [],
@@ -34,7 +35,7 @@ import {AlbumArtists} from "./albums/album-artists.model";
             password: process.env.POSTGRES_PASSWORD,
             database: process.env.POSTGRES_DB,
             autoLoadModels: true,
-            models: [User, Artist, UserBlockedArtists, Album, AlbumArtists]
+            models: [User, Artist, UserBlockedArtists, Album, AlbumArtists, UserFavouriteAlbums]
         }),
         UsersModule,
         AuthModule,

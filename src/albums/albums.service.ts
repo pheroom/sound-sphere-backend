@@ -5,9 +5,7 @@ import {FilesService} from "../files/files.service";
 import {ArtistsService} from "../artists/artists.service";
 import {Album} from "./albums.model";
 import {AlbumArtists} from "./album-artists.model";
-import {UsersService} from "../users/users.service";
 import {Artist} from "../artists/artists.model";
-import {UpdateUserDto} from "../users/dto/update-user.dto";
 import {UpdateAlbumDto} from "./dto/update-album.dto";
 
 @Injectable()
@@ -15,9 +13,7 @@ export class AlbumsService {
     constructor(@InjectModel(Album) private albumRepository: typeof Album,
                 @InjectModel(AlbumArtists) private albumArtistsRepository: typeof AlbumArtists,
                 private filesService: FilesService,
-                private artistsService: ArtistsService,
-                // private usersService: UsersService
-    ) {}
+                private artistsService: ArtistsService) {}
 
     async create(dto: AlbumDto, artistId: number) {
         const album = await this.albumRepository.create(dto);
@@ -29,19 +25,27 @@ export class AlbumsService {
         return album;
     }
 
-    async getAllAlbums(userId: number) {
-        const albums = await this.albumRepository.findAll();
+    async getAllAlbums() {
+        const albums = await this.albumRepository.findAll({
+            where: {isPrivate: false},
+            include: [{
+                model: Artist,
+                through: {attributes: []}
+            }]
+        });
         return albums;
+    }
+
+    async getAlbumById(albumId: number) {
+        const album = await this.albumRepository.findByPk(albumId);
+        return album;
     }
 
     async getAlbumWithTracksById(albumId: number) {
         const album = await this.albumRepository.findByPk(albumId, {
             include: [{
                 model: Artist,
-                through: {
-                    attributes: []
-                },
-                attributes: ['id', 'name'],
+                through: {attributes: []},
             }]
         });
         if(!album){

@@ -1,4 +1,4 @@
-import {HttpException, HttpStatus, Inject, Injectable, Scope} from '@nestjs/common';
+import {HttpException, HttpStatus, Inject, Injectable, NotFoundException, Scope} from '@nestjs/common';
 import {User} from "./users.model";
 import {InjectModel} from "@nestjs/sequelize";
 import {CreateUserDto} from "./dto/create-user.dto";
@@ -7,12 +7,17 @@ import {FilesService} from "../files/files.service";
 import {ArtistsService} from "../artists/artists.service";
 import {Artist} from "../artists/artists.model";
 import {UserBlockedArtists} from "./user-blocked-artists.model";
+import {AlbumsService} from "../albums/albums.service";
+import {UserFavouriteAlbums} from "./user-favourite-albums.model";
+import {Album} from "../albums/albums.model";
 
 @Injectable({ scope: Scope.REQUEST })
 export class UsersService {
     constructor(@InjectModel(User) private userRepository: typeof User,
                 @InjectModel(UserBlockedArtists) private userBlockedArtistsRepository: typeof UserBlockedArtists,
+                @InjectModel(UserFavouriteAlbums) private userFavouriteAlbumsRepository: typeof UserFavouriteAlbums,
                 private filesService: FilesService,
+                private albumService: AlbumsService,
                 private artistsService: ArtistsService) {}
 
     async createUser(dto: CreateUserDto) {
@@ -65,29 +70,52 @@ export class UsersService {
     }
 
     async unblockArtist(userId: number, artistId: number){
-        const user = await this.userRepository.findByPk(userId);
-        const artist = await this.artistsService.getArtistById(artistId);
-        if (!artist || !user) {
-            throw new HttpException('Artist not found', HttpStatus.NOT_FOUND);
-        }
         const result = await this.userBlockedArtistsRepository.destroy({where: {userId, artistId}})
         if (result === 0) {
-            throw new Error('Artist not found in blocked list');
+            throw new NotFoundException('Artist not found in blocked list');
         }
         return
     }
 
-    async getBlockedArtistsByUserId(id: number){
-        // const user = await this.userRepository.findOne({where: {id}, include: [Artist]});
-        // const res = await this.userBlockedArtistsRepository.findAll({where: {userId: id}});
-        const user = await this.userRepository.findByPk(id, {
+    async getBlockedArtistsByUserId(userId: number){
+        const user = await this.userRepository.findByPk(userId, {
             include: [{
                 model: Artist,
-                through: {
-                    attributes: []
-                }
+                through: {attributes: []},
             }]
         });
         return user.blockedArtists
+    }
+
+    async favouriteAlbum(userId: number, albumId: number){
+        const user = await this.userRepository.findByPk(userId);
+        const album = await this.albumService.getAlbumById(albumId);
+        if (!album || !user || album.isPrivate) {
+            throw new HttpException('Album not found', HttpStatus.NOT_FOUND);
+        }
+        await user.$add('favouriteAlbums', albumId)
+        return
+    }
+
+    async unfavouriteAlbum(userId: number, albumId: number){
+        const result = await this.userFavouriteAlbumsRepository.destroy({where: {userId, albumId}})
+        if (result === 0) {
+            throw new NotFoundException('Album not found in favourites list');
+        }
+        return
+    }
+
+    async getFavouriteAlbumsByUserId(userId: number){
+        const user = await this.userRepository.findByPk(userId, {
+            include: [{
+                model: Album,
+                through: {attributes: []},
+                include: [{
+                    model: Artist,
+                    through: {attributes: []}
+                }]
+            }]
+        });
+        return user?.favouriteAlbums || []
     }
 }

@@ -8,12 +8,13 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 import {UsersService} from "./users.service";
-import {ApiOperation, ApiResponse} from "@nestjs/swagger";
+import {ApiBearerAuth, ApiOperation, ApiResponse} from "@nestjs/swagger";
 import {User} from "./users.model";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
 import {UpdateUserDto} from "./dto/update-user.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {Artist} from "../artists/artists.model";
+import {Album} from "../albums/albums.model";
 
 @Controller('users')
 export class UsersController {
@@ -66,5 +67,30 @@ export class UsersController {
     @Get('block-artists')
     getBlockedArtist(@Req() req){
         return this.usersService.getBlockedArtistsByUserId(+req.user.id)
+    }
+
+    @ApiOperation({summary: 'Add album to favourites'})
+    @ApiResponse({status: 200})
+    @UseGuards(JwtAuthGuard)
+    @Post('favourite-albums/:albumId')
+    favouriteAlbum(@Req() req, @Param('albumId') albumId: string){
+        return this.usersService.favouriteAlbum(+req.user.id, +albumId)
+    }
+
+    @ApiOperation({summary: 'Remove album from favourites'})
+    @ApiResponse({status: 200})
+    @UseGuards(JwtAuthGuard)
+    @Delete('favourite-albums/:albumId')
+    unfavouriteAlbum(@Req() req, @Param('albumId') albumId: string){
+        return this.usersService.unfavouriteAlbum(+req.user.id, +albumId)
+    }
+
+    @ApiOperation({summary: 'Get favourites albums for auth user'})
+    @ApiResponse({status: 200, type: [Album]})
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Get('/favourite-albums/:userId')
+    getFavouriteAlbums(@Param('userId') userId: string){
+        return this.usersService.getFavouriteAlbumsByUserId(+userId)
     }
 }
