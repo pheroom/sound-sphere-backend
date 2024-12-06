@@ -11,15 +11,19 @@ import {ArtistsModule} from "../artists/artists.module";
 import {UserFavouriteAlbums} from "./user-favourite-albums.model";
 import {Album} from "../albums/albums.model";
 import {AlbumsModule} from "../albums/albums.module";
+import {UserFavouriteTracks} from "./user-favourite-tracks.model";
+import {Track} from "../tracks/tracks.model";
+import {TracksModule} from "../tracks/tracks.module";
 
 @Module({
     controllers: [UsersController],
     providers: [UsersService],
     imports: [
-        SequelizeModule.forFeature([User, UserBlockedArtists, Artist, UserFavouriteAlbums, Album]),
+        SequelizeModule.forFeature([User, UserBlockedArtists, Artist, UserFavouriteAlbums, Album, UserFavouriteTracks, Track]),
         forwardRef(() => AuthModule),
         ArtistsModule,
         AlbumsModule,
+        TracksModule,
         FilesModule,
     ],
     exports: [

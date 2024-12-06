@@ -33,7 +33,7 @@ export class ArtistsAuthService {
     }
 
     private async validateArtist(artistDto: LoginArtistDto) {
-        const artist = await this.artistsService.getArtistByUsername(artistDto.username);
+        const artist = await this.artistsService.getArtistByUsername(artistDto.username, true);
         if(!artist){
             throw new HttpException("Artist not exist", HttpStatus.BAD_REQUEST);
         }

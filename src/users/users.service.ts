@@ -10,14 +10,19 @@ import {UserBlockedArtists} from "./user-blocked-artists.model";
 import {AlbumsService} from "../albums/albums.service";
 import {UserFavouriteAlbums} from "./user-favourite-albums.model";
 import {Album} from "../albums/albums.model";
+import {UserFavouriteTracks} from "./user-favourite-tracks.model";
+import {TracksService} from "../tracks/tracks.service";
+import {Track} from "../tracks/tracks.model";
 
 @Injectable({ scope: Scope.REQUEST })
 export class UsersService {
     constructor(@InjectModel(User) private userRepository: typeof User,
                 @InjectModel(UserBlockedArtists) private userBlockedArtistsRepository: typeof UserBlockedArtists,
                 @InjectModel(UserFavouriteAlbums) private userFavouriteAlbumsRepository: typeof UserFavouriteAlbums,
+                @InjectModel(UserFavouriteTracks) private userFavouriteTracksRepository: typeof UserFavouriteTracks,
                 private filesService: FilesService,
-                private albumService: AlbumsService,
+                private albumsService: AlbumsService,
+                private tracksService: TracksService,
                 private artistsService: ArtistsService) {}
 
     async createUser(dto: CreateUserDto) {
@@ -48,13 +53,15 @@ export class UsersService {
         return users;
     }
 
-    async getUserById(id: number) {
-        const user = await this.userRepository.findByPk(id);
+    async getUserById(id: number, withPassword = false) {
+        const repository = withPassword ? this.userRepository.scope('withPassword') : this.userRepository
+        const user = await repository.findByPk(id);
         return user
     }
 
-    async getUserByUsername(username: string) {
-        const user = await this.userRepository.findOne({ where: {username} });
+    async getUserByUsername(username: string, withPassword = false) {
+        const repository = withPassword ? this.userRepository.scope('withPassword') : this.userRepository
+        const user = await repository.findOne({ where: {username} });
         return user
     }
 
@@ -62,7 +69,7 @@ export class UsersService {
         const user = await this.userRepository.findByPk(userId);
         const artist = await this.artistsService.getArtistById(artistId);
         if (!artist || !user) {
-            throw new HttpException('Artist not found', HttpStatus.NOT_FOUND);
+            throw new NotFoundException('Artist not found');
         }
         await user.$add('blockedArtists', artistId)
         // await this.userBlockedArtistsRepository.create({userId: user.id, artistId});
@@ -89,9 +96,9 @@ export class UsersService {
 
     async favouriteAlbum(userId: number, albumId: number){
         const user = await this.userRepository.findByPk(userId);
-        const album = await this.albumService.getAlbumById(albumId);
+        const album = await this.albumsService.getAlbumById(albumId);
         if (!album || !user || album.isPrivate) {
-            throw new HttpException('Album not found', HttpStatus.NOT_FOUND);
+            throw new NotFoundException('Album not found');
         }
         await user.$add('favouriteAlbums', albumId)
         return
@@ -117,5 +124,37 @@ export class UsersService {
             }]
         });
         return user?.favouriteAlbums || []
+    }
+
+    async favouriteTrack(userId: number, trackId: number){
+        const user = await this.userRepository.findByPk(userId);
+        const track = await this.tracksService.getTrackById(trackId);
+        if (!track || !user) {
+            throw new NotFoundException('Track not found');
+        }
+        await user.$add('favouriteTracks', trackId)
+        return
+    }
+
+    async unfavouriteTrack(userId: number, trackId: number){
+        const result = await this.userFavouriteTracksRepository.destroy({where: {userId, trackId}})
+        if (result === 0) {
+            throw new NotFoundException('Track not found in favourites list');
+        }
+        return
+    }
+
+    async getFavouriteTracksByUserId(userId: number){
+        const user = await this.userRepository.findByPk(userId, {
+            include: [{
+                model: Track,
+                through: {attributes: []},
+                include: [{
+                    model: Artist,
+                    through: {attributes: []}
+                }]
+            }]
+        });
+        return user?.favouriteTracks || []
     }
 }

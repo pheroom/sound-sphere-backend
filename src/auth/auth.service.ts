@@ -5,6 +5,7 @@ import {UsersService} from "../users/users.service";
 import {JwtService} from "@nestjs/jwt";
 import * as bcrypt from 'bcryptjs'
 import {User} from "../users/users.model";
+import {getRegistrationToken} from "@nestjs/config/dist/utils/get-registration-token.util";
 
 @Injectable()
 export class AuthService {
@@ -33,7 +34,7 @@ export class AuthService {
     }
 
     private async validateUser(userDto: LoginUserDto) {
-        const user = await this.userService.getUserByUsername(userDto.username);
+        const user = await this.userService.getUserByUsername(userDto.username, true);
         if(!user){
             throw new HttpException("User not exist", HttpStatus.BAD_REQUEST);
         }

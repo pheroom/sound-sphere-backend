@@ -39,13 +39,15 @@ export class ArtistsService {
         return artists;
     }
 
-    async getArtistById(id: number) {
-        const artist = await this.artistRepository.findByPk(id);
+    async getArtistById(id: number, withPassword = false) {
+        const repository = withPassword ? this.artistRepository.scope('withPassword') : this.artistRepository
+        const artist = await repository.findByPk(id);
         return artist
     }
 
-    async getArtistByUsername(username: string) {
-        const artist = await this.artistRepository.findOne({ where: {username} });
+    async getArtistByUsername(username: string, withPassword = false) {
+        const repository = withPassword ? this.artistRepository.scope('withPassword') : this.artistRepository
+        const artist = await repository.findOne({ where: {username} });
         return artist
     }
 

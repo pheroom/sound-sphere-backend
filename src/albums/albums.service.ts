@@ -7,6 +7,7 @@ import {Album} from "./albums.model";
 import {AlbumArtists} from "./album-artists.model";
 import {Artist} from "../artists/artists.model";
 import {UpdateAlbumDto} from "./dto/update-album.dto";
+import {Track} from "../tracks/tracks.model";
 
 @Injectable()
 export class AlbumsService {
@@ -17,10 +18,6 @@ export class AlbumsService {
 
     async create(dto: AlbumDto, artistId: number) {
         const album = await this.albumRepository.create(dto);
-        const artist = await this.artistsService.getArtistById(artistId)
-        if(!artist){
-            throw new NotFoundException("No artists found")
-        }
         await album.$add('artists', artistId)
         return album;
     }
@@ -46,6 +43,12 @@ export class AlbumsService {
             include: [{
                 model: Artist,
                 through: {attributes: []},
+            },{
+                model: Track,
+                include: [{
+                    model: Artist,
+                    through: {attributes: []}
+                }]
             }]
         });
         if(!album){

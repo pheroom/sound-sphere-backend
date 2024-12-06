@@ -4,6 +4,8 @@ import {User} from "../users/users.model";
 import {UserBlockedArtists} from "../users/user-blocked-artists.model";
 import {Album} from "../albums/albums.model";
 import {AlbumArtists} from "../albums/album-artists.model";
+import {Track} from "../tracks/tracks.model";
+import {TrackArtists} from "../tracks/track-artists.model";
 
 interface ArtistCreationAttrs{
     username:string;
@@ -13,6 +15,11 @@ interface ArtistCreationAttrs{
 
 @DefaultScope(() => ({
     attributes: { exclude: ['password'] }
+}))
+@Scopes(() => ({
+    withPassword: {
+        attributes: { include: ['password']}
+    }
 }))
 @Table({tableName: 'artists'})
 export class Artist extends Model<Artist, ArtistCreationAttrs> {
@@ -45,4 +52,7 @@ export class Artist extends Model<Artist, ArtistCreationAttrs> {
 
     @BelongsToMany(() => Album, () => AlbumArtists)
     albums: User[]
+
+    @BelongsToMany(() => Track, () => TrackArtists)
+    tracks: User[]
 }

@@ -15,6 +15,7 @@ import {UpdateUserDto} from "./dto/update-user.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {Artist} from "../artists/artists.model";
 import {Album} from "../albums/albums.model";
+import {Track} from "../tracks/tracks.model";
 
 @Controller('users')
 export class UsersController {
@@ -85,12 +86,37 @@ export class UsersController {
         return this.usersService.unfavouriteAlbum(+req.user.id, +albumId)
     }
 
-    @ApiOperation({summary: 'Get favourites albums for auth user'})
+    @ApiOperation({summary: 'Get favourites albums by user Id'})
     @ApiResponse({status: 200, type: [Album]})
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
-    @Get('/favourite-albums/:userId')
-    getFavouriteAlbums(@Param('userId') userId: string){
-        return this.usersService.getFavouriteAlbumsByUserId(+userId)
+    @Get('favourite-albums/:userId')
+    getFavouriteAlbums(@Param('userId') userId: number){
+        return this.usersService.getFavouriteAlbumsByUserId(userId)
+    }
+
+    @ApiOperation({summary: 'Add track to favourites'})
+    @ApiResponse({status: 200})
+    @UseGuards(JwtAuthGuard)
+    @Post('favourite-tracks/:trackId')
+    favouriteTrack(@Req() req, @Param('trackId') trackId: number){
+        return this.usersService.favouriteTrack(+req.user.id, trackId)
+    }
+
+    @ApiOperation({summary: 'Remove track from favourites'})
+    @ApiResponse({status: 200})
+    @UseGuards(JwtAuthGuard)
+    @Delete('favourite-tracks/:trackId')
+    unfavouriteTrack(@Req() req, @Param('trackId') trackId: number){
+        return this.usersService.unfavouriteTrack(+req.user.id, trackId)
+    }
+
+    @ApiOperation({summary: 'Get favourites tracks by user Id'})
+    @ApiResponse({status: 200, type: [Track]})
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Get('favourite-tracks/:userId')
+    getFavouriteTracks(@Param('userId') userId: number){
+        return this.usersService.getFavouriteTracksByUserId(userId)
     }
 }

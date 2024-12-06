@@ -43,8 +43,8 @@ export class AlbumsController {
     @ApiResponse({status: 200, type: Album})
     @UseGuards(JwtAuthGuard)
     @Get('with-tracks/:albumId')
-    getAlbumWithTracks(@Param('albumId') albumId: string) {
-        return this.albumService.getAlbumWithTracksById(+albumId);
+    getAlbumWithTracks(@Param('albumId') albumId: number) {
+        return this.albumService.getAlbumWithTracksById(albumId);
     }
 
     @ApiOperation({summary: 'Update album'})

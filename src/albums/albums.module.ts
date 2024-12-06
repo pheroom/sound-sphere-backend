@@ -10,12 +10,13 @@ import {ArtistsModule} from "../artists/artists.module";
 import {ArtistsAuthModule} from "../artists-auth/artists-auth.module";
 import {User} from "../users/users.model";
 import {UserFavouriteAlbums} from "../users/user-favourite-albums.model";
+import {Track} from "../tracks/tracks.model";
 
 @Module({
     controllers: [AlbumsController],
     providers: [AlbumsService],
     imports: [
-        SequelizeModule.forFeature([Album, AlbumArtists, Artist, User, UserFavouriteAlbums]),
+        SequelizeModule.forFeature([Album, AlbumArtists, Artist, User, UserFavouriteAlbums, Track]),
         forwardRef(() => ArtistsModule),
         FilesModule,
         ArtistsAuthModule
