@@ -1,7 +1,7 @@
 import {
     Body,
     Controller, Delete,
-    Get, Param, Patch, Post,
+    Get, Param, Patch, Post, Query,
     Req,
     UploadedFile,
     UseGuards,
@@ -23,14 +23,14 @@ export class UsersController {
 
     @ApiOperation({summary: 'Get all users'})
     @ApiResponse({status: 200, type: [User]})
-    @UseGuards(JwtAuthGuard)
     @Get()
-    getAll() {
-        return this.usersService.getAllUsers()
+    getAll(@Query('query') query: string, @Query('limit') limit: number, @Query('page') page: number) {
+        return this.usersService.getAllUsers(limit, page)
     }
 
     @ApiOperation({summary: 'Get user profile by username'})
     @ApiResponse({status: 200, type: User})
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('get-one-by-username/:username')
     getUserByUsername(@Param('username') username: string) {
@@ -39,6 +39,7 @@ export class UsersController {
 
     @ApiOperation({summary: 'Update user profile'})
     @ApiResponse({status: 200, type: User})
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Patch()
     @UseInterceptors(FileInterceptor('image'))
@@ -48,6 +49,7 @@ export class UsersController {
 
     @ApiOperation({summary: 'Block artist'})
     @ApiResponse({status: 200})
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Post('block-artists/:artistId')
     blockArtist(@Req() req, @Param('artistId') artistId: string){
@@ -56,6 +58,7 @@ export class UsersController {
 
     @ApiOperation({summary: 'Unlock artist'})
     @ApiResponse({status: 200})
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Delete('block-artists/:artistId')
     unblockArtist(@Req() req, @Param('artistId') artistId: string){
@@ -64,14 +67,16 @@ export class UsersController {
 
     @ApiOperation({summary: 'Get blocked artist for auth user'})
     @ApiResponse({status: 200, type: [Artist]})
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('block-artists')
-    getBlockedArtist(@Req() req){
-        return this.usersService.getBlockedArtistsByUserId(+req.user.id)
+    getBlockedArtist(@Req() req, @Query('limit') limit: number, @Query('page') page: number){
+        return this.usersService.getBlockedArtistsByUserId(+req.user.id, limit, page)
     }
 
     @ApiOperation({summary: 'Add album to favourites'})
     @ApiResponse({status: 200})
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Post('favourite-albums/:albumId')
     favouriteAlbum(@Req() req, @Param('albumId') albumId: string){
@@ -80,6 +85,7 @@ export class UsersController {
 
     @ApiOperation({summary: 'Remove album from favourites'})
     @ApiResponse({status: 200})
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Delete('favourite-albums/:albumId')
     unfavouriteAlbum(@Req() req, @Param('albumId') albumId: string){
@@ -91,12 +97,13 @@ export class UsersController {
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('favourite-albums/:userId')
-    getFavouriteAlbums(@Param('userId') userId: number){
-        return this.usersService.getFavouriteAlbumsByUserId(userId)
+    getFavouriteAlbums(@Param('userId') userId: number, @Query('limit') limit: number, @Query('page') page: number){
+        return this.usersService.getFavouriteAlbumsByUserId(userId, limit, page)
     }
 
     @ApiOperation({summary: 'Add track to favourites'})
     @ApiResponse({status: 200})
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Post('favourite-tracks/:trackId')
     favouriteTrack(@Req() req, @Param('trackId') trackId: number){
@@ -105,6 +112,7 @@ export class UsersController {
 
     @ApiOperation({summary: 'Remove track from favourites'})
     @ApiResponse({status: 200})
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Delete('favourite-tracks/:trackId')
     unfavouriteTrack(@Req() req, @Param('trackId') trackId: number){
@@ -116,7 +124,7 @@ export class UsersController {
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('favourite-tracks/:userId')
-    getFavouriteTracks(@Param('userId') userId: number){
-        return this.usersService.getFavouriteTracksByUserId(userId)
+    getFavouriteTracks(@Param('userId') userId: number, @Query('limit') limit: number, @Query('page') page: number){
+        return this.usersService.getFavouriteTracksByUserId(userId, limit, page)
     }
 }

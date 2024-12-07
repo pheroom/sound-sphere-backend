@@ -11,7 +11,6 @@ import { AuthModule } from './auth/auth.module';
 import { FilesModule } from './files/files.module';
 import {ServeStaticModule} from "@nestjs/serve-static";
 import * as path from 'path'
-import {ArtistsAuthModule} from "./artists-auth/artists-auth.module";
 import { AlbumsModule } from './albums/albums.module';
 import {Album} from "./albums/albums.model";
 import {AlbumArtists} from "./albums/album-artists.model";
@@ -44,7 +43,6 @@ import {UserFavouriteTracks} from "./users/user-favourite-tracks.model";
         UsersModule,
         AuthModule,
         ArtistsModule,
-        ArtistsAuthModule,
         FilesModule,
         AlbumsModule,
         TracksModule,

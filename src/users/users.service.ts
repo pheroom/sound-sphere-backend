@@ -1,9 +1,9 @@
-import {HttpException, HttpStatus, Inject, Injectable, NotFoundException, Scope} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, NotFoundException, Scope} from '@nestjs/common';
 import {User} from "./users.model";
 import {InjectModel} from "@nestjs/sequelize";
 import {CreateUserDto} from "./dto/create-user.dto";
 import {UpdateUserDto} from "./dto/update-user.dto";
-import {FilesService} from "../files/files.service";
+import {FilesService, FileTypes} from "../files/files.service";
 import {ArtistsService} from "../artists/artists.service";
 import {Artist} from "../artists/artists.model";
 import {UserBlockedArtists} from "./user-blocked-artists.model";
@@ -13,6 +13,8 @@ import {Album} from "../albums/albums.model";
 import {UserFavouriteTracks} from "./user-favourite-tracks.model";
 import {TracksService} from "../tracks/tracks.service";
 import {Track} from "../tracks/tracks.model";
+import {Op} from "sequelize";
+import {TrackArtists} from "../tracks/track-artists.model";
 
 @Injectable({ scope: Scope.REQUEST })
 export class UsersService {
@@ -42,14 +44,21 @@ export class UsersService {
             }
         }
         if(image){
-            updates.avatarURL = await this.filesService.createFile(image)
+            updates.avatarURL = await this.filesService.createFile(FileTypes.IMAGE, image)
         }
         const [_, [updatedUser]] = await this.userRepository.update(updates, { where: { id: user.id }, returning: true });
         return updatedUser
     }
 
-    async getAllUsers() {
-        const users = await this.userRepository.findAll()
+    async getAllUsers(limit = 10, page = 1, query = '') {
+        const offset = (page - 1) * limit;
+        const users = await this.userRepository.findAll({
+            where: {
+                username: {[Op.iLike]: `%${query}%`},
+            },
+            limit,
+            offset
+        });
         return users;
     }
 
@@ -84,12 +93,16 @@ export class UsersService {
         return
     }
 
-    async getBlockedArtistsByUserId(userId: number){
+    async getBlockedArtistsByUserId(userId: number, limit = 10, page = 1){
+        const offset = (page - 1) * limit;
         const user = await this.userRepository.findByPk(userId, {
             include: [{
                 model: Artist,
                 through: {attributes: []},
-            }]
+            }],
+            limit,
+            offset,
+            order: [[{model: Artist, as: 'blockedArtists'}, UserBlockedArtists, 'createdAt', 'desc']]
         });
         return user.blockedArtists
     }
@@ -112,7 +125,8 @@ export class UsersService {
         return
     }
 
-    async getFavouriteAlbumsByUserId(userId: number){
+    async getFavouriteAlbumsByUserId(userId: number, limit = 10, page = 1){
+        const offset = (page - 1) * limit;
         const user = await this.userRepository.findByPk(userId, {
             include: [{
                 model: Album,
@@ -121,7 +135,10 @@ export class UsersService {
                     model: Artist,
                     through: {attributes: []}
                 }]
-            }]
+            }],
+            limit,
+            offset,
+            order: [[{model: Album, as: 'favouriteAlbums'}, UserFavouriteAlbums, 'createdAt', 'desc']]
         });
         return user?.favouriteAlbums || []
     }
@@ -144,7 +161,8 @@ export class UsersService {
         return
     }
 
-    async getFavouriteTracksByUserId(userId: number){
+    async getFavouriteTracksByUserId(userId: number, limit = 10, page = 1){
+        const offset = (page - 1) * limit;
         const user = await this.userRepository.findByPk(userId, {
             include: [{
                 model: Track,
@@ -153,7 +171,10 @@ export class UsersService {
                     model: Artist,
                     through: {attributes: []}
                 }]
-            }]
+            }],
+            limit,
+            offset,
+            order: [[{model: Track, as: 'favouriteTracks'}, UserFavouriteTracks, 'createdAt', 'desc']]
         });
         return user?.favouriteTracks || []
     }

@@ -3,8 +3,10 @@ import {InjectModel} from "@nestjs/sequelize";
 import {CreateArtistDto} from "./dto/create-artist.dto";
 import {Artist} from "./artists.model";
 import {UpdateArtistDto} from "./dto/update-artist.dto";
-import {FilesService} from "../files/files.service";
+import {FilesService, FileTypes} from "../files/files.service";
 import {Album} from "../albums/albums.model";
+import {Op} from "sequelize";
+import {UserBlockedArtists} from "../users/user-blocked-artists.model";
 
 @Injectable()
 export class ArtistsService {
@@ -28,14 +30,21 @@ export class ArtistsService {
             }
         }
         if(image){
-            updates.avatarURL = await this.filesService.createFile(image)
+            updates.avatarURL = await this.filesService.createFile(FileTypes.IMAGE, image)
         }
         const [_, [updatedArtist]] = await this.artistRepository.update(updates, { where: { id: artist.id }, returning: true });
         return updatedArtist
     }
 
-    async getAllArtists() {
-        const artists = await this.artistRepository.findAll()
+    async getAllArtists(limit = 10, page = 1, query = '') {
+        const offset = (page - 1) * limit;
+        const artists = await this.artistRepository.findAll({
+            where: {
+                name: {[Op.iLike]: `%${query}%`},
+            },
+            limit,
+            offset
+        });
         return artists;
     }
 
@@ -55,9 +64,14 @@ export class ArtistsService {
         const artist = await this.artistRepository.findByPk(artistId, {
             include: {
                 model: Album,
-                through: {attributes: []}
-            }
+                through: {attributes: []},
+                include: [{
+                    model: Artist,
+                    through: {attributes: []},
+                }]
+            },
+            order: [[{model: Album, as: 'albums'}, 'createdAt', 'desc']]
         })
-        return artist.albums
+        return artist?.albums || []
     }
 }

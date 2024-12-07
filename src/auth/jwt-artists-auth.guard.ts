@@ -17,6 +17,7 @@ export class JwtArtistsAuthGuard implements CanActivate {
                 throw new Error();
             }
             const artist = this.jwtService.verify(token);
+            if(!artist.isArtist) throw new Error()
             req.artist = artist;
             return artist;
         } catch (e){

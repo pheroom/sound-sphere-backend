@@ -9,13 +9,13 @@ import {
     UseGuards,
     Req,
     UseInterceptors,
-    UploadedFile
+    UploadedFile, Query
 } from '@nestjs/common';
 import { AlbumsService } from './albums.service';
 import { AlbumDto } from './dto/album.dto';
-import {ApiOperation, ApiResponse} from "@nestjs/swagger";
+import {ApiBearerAuth, ApiOperation, ApiResponse} from "@nestjs/swagger";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
-import {JwtArtistsAuthGuard} from "../artists-auth/jwt-artists-auth.guard";
+import {JwtArtistsAuthGuard} from "../auth/jwt-artists-auth.guard";
 import {Album} from "./albums.model";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {UpdateAlbumDto} from "./dto/update-album.dto";
@@ -26,21 +26,24 @@ export class AlbumsController {
 
     @ApiOperation({summary: 'Create a new album'})
     @ApiResponse({status: 200, type: Album})
+    @ApiBearerAuth()
     @UseGuards(JwtArtistsAuthGuard)
     @Post()
     create(@Req() req, @Body() albumDto: AlbumDto) {
         return this.albumService.create(albumDto, +req.artist.id);
     }
 
-    @ApiOperation({summary: 'Get all album'})
+    @ApiOperation({summary: 'Get all album by query'})
     @ApiResponse({status: 200, type: [Album]})
+    @UseGuards(JwtAuthGuard)
     @Get('all')
-    getAll() {
-        return this.albumService.getAllAlbums();
+    getAll(@Query('query') query: string, @Query('limit') limit: number, @Query('page') page: number) {
+        return this.albumService.getAllAlbums(limit, page, query);
     }
 
     @ApiOperation({summary: 'Get album with tracks'})
     @ApiResponse({status: 200, type: Album})
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('with-tracks/:albumId')
     getAlbumWithTracks(@Param('albumId') albumId: number) {
@@ -49,6 +52,7 @@ export class AlbumsController {
 
     @ApiOperation({summary: 'Update album'})
     @ApiResponse({status: 200, type: Album})
+    @ApiBearerAuth()
     @UseGuards(JwtArtistsAuthGuard)
     @Patch(':albumId')
     @UseInterceptors(FileInterceptor('image'))
@@ -56,8 +60,30 @@ export class AlbumsController {
         return this.albumService.updateAlbum(+req.artist.id, +albumId, dto, image)
     }
 
-    // @Delete(':id')
-    // remove(@Param('id') id: string) {
-    //     return this.albumService.remove(+id);
-    // }
+    @ApiOperation({summary: 'Delete album'})
+    @ApiResponse({status: 200})
+    @ApiBearerAuth()
+    @UseGuards(JwtArtistsAuthGuard)
+    @Delete(':albumId')
+    remove(@Req() req, @Param('albumId') albumId: number) {
+        return this.albumService.deleteAlbum(+req.artist.id, albumId);
+    }
+
+    @ApiOperation({summary: 'Add album artist'})
+    @ApiResponse({status: 200})
+    @ApiBearerAuth()
+    @UseGuards(JwtArtistsAuthGuard)
+    @Post('artists/:artistId/:albumId')
+    addTrackArtist(@Req() req, @Param('albumId') albumId: number, @Param('artistId') artistId: number) {
+        return this.albumService.addAlbumArtist(+req.artist.id, albumId, artistId);
+    }
+
+    @ApiOperation({summary: 'Remove album artist'})
+    @ApiResponse({status: 200})
+    @ApiBearerAuth()
+    @UseGuards(JwtArtistsAuthGuard)
+    @Delete('artists/:artistId/:albumId')
+    removeTrackArtist(@Req() req, @Param('albumId') albumId: number, @Param('artistId') artistId: number) {
+        return this.albumService.removeAlbumArtist(+req.artist.id, albumId, artistId);
+    }
 }

@@ -7,8 +7,11 @@ import {TrackArtists} from "./track-artists.model";
 import {UserFavouriteTracks} from "../users/user-favourite-tracks.model";
 
 interface TrackCreationAttrs{
-    name:string;
-    pictureURL:string;
+    name: string;
+    pictureURL: string;
+    audioURL: string;
+    number: number;
+    albumId: number;
 }
 
 @Table({tableName: 'tracks'})

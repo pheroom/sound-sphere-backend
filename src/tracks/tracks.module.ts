@@ -11,7 +11,7 @@ import {UserFavouriteTracks} from "../users/user-favourite-tracks.model";
 import {FilesModule} from "../files/files.module";
 import {ArtistsModule} from "../artists/artists.module";
 import {AlbumsModule} from "../albums/albums.module";
-import {ArtistsAuthModule} from "../artists-auth/artists-auth.module";
+import {AuthModule} from "../auth/auth.module";
 
 @Module({
     providers: [TracksService],
@@ -21,7 +21,7 @@ import {ArtistsAuthModule} from "../artists-auth/artists-auth.module";
         FilesModule,
         ArtistsModule,
         AlbumsModule,
-        ArtistsAuthModule
+        AuthModule
     ],
     exports: [
         TracksService,

@@ -7,10 +7,10 @@ import {Artist} from "../artists/artists.model";
 import {AlbumArtists} from "./album-artists.model";
 import {FilesModule} from "../files/files.module";
 import {ArtistsModule} from "../artists/artists.module";
-import {ArtistsAuthModule} from "../artists-auth/artists-auth.module";
 import {User} from "../users/users.model";
 import {UserFavouriteAlbums} from "../users/user-favourite-albums.model";
 import {Track} from "../tracks/tracks.model";
+import {AuthModule} from "../auth/auth.module";
 
 @Module({
     controllers: [AlbumsController],
@@ -18,8 +18,8 @@ import {Track} from "../tracks/tracks.model";
     imports: [
         SequelizeModule.forFeature([Album, AlbumArtists, Artist, User, UserFavouriteAlbums, Track]),
         forwardRef(() => ArtistsModule),
-        FilesModule,
-        ArtistsAuthModule
+        forwardRef(() => AuthModule),
+        FilesModule
     ],
     exports: [
         AlbumsService,

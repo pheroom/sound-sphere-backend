@@ -4,12 +4,16 @@ import {CreateUserDto} from "../users/dto/create-user.dto";
 import {UsersService} from "../users/users.service";
 import {JwtService} from "@nestjs/jwt";
 import * as bcrypt from 'bcryptjs'
-import {User} from "../users/users.model";
-import {getRegistrationToken} from "@nestjs/config/dist/utils/get-registration-token.util";
+import {LoginArtistDto} from "../artists/dto/login-artist.dto";
+import {CreateArtistDto} from "../artists/dto/create-artist.dto";
+import {ArtistsService} from "../artists/artists.service";
+import {Artist} from "../artists/artists.model";
 
 @Injectable()
 export class AuthService {
-    constructor(private userService: UsersService, private jwtService: JwtService) {}
+    constructor(private userService: UsersService,
+                private artistsService: ArtistsService,
+                private jwtService: JwtService) {}
 
     async login(userDto: LoginUserDto) {
         const user = await this.validateUser(userDto)
@@ -26,8 +30,8 @@ export class AuthService {
         return this.generateToken(user)
     }
 
-    private async generateToken(user: User){
-        const payload = {username: user.username, id: user.id};
+    private async generateToken(user: {id: number, username: string}) {
+        const payload = {username: user.username, id: user.id, isArtist: user instanceof Artist};
         return {
             token: this.jwtService.sign(payload)
         }
@@ -43,5 +47,32 @@ export class AuthService {
             throw new UnauthorizedException({message: "Password is incorrect"});
         }
         return user
+    }
+
+    async artistLogin(artistDto: LoginArtistDto) {
+        const artist = await this.validateArtist(artistDto)
+        return this.generateToken(artist)
+    }
+
+    async artistRegistration(artistDto: CreateArtistDto) {
+        const candidate = await this.artistsService.getArtistByUsername(artistDto.username);
+        if (candidate) {
+            throw new HttpException("Artist with this username already exists", HttpStatus.BAD_REQUEST);
+        }
+        const hashPassword = await bcrypt.hash(artistDto.password, 6);
+        const artist = await this.artistsService.createArtist({...artistDto, password: hashPassword});
+        return this.generateToken(artist)
+    }
+
+    private async validateArtist(artistDto: LoginArtistDto) {
+        const artist = await this.artistsService.getArtistByUsername(artistDto.username, true);
+        if(!artist){
+            throw new HttpException("Artist not exist", HttpStatus.BAD_REQUEST);
+        }
+        const passwordIsEquals = await bcrypt.compare(artistDto.password, artist.password);
+        if(!passwordIsEquals){
+            throw new UnauthorizedException({message: "Password is incorrect"});
+        }
+        return artist
     }
 }
