@@ -1,5 +1,5 @@
 import {ApiProperty} from "@nestjs/swagger";
-import {IsString, Length} from "class-validator";
+import {IsOptional, IsString, Length} from "class-validator";
 import {LoginUserDto} from "./login-user.dto";
 
 export class CreateUserDto extends LoginUserDto {
@@ -9,7 +9,8 @@ export class CreateUserDto extends LoginUserDto {
     readonly firstname: string;
 
     @ApiProperty({example: 'Parker'})
+    @IsOptional()
     @IsString({message: 'Lastname must be string'})
     @Length(0, 20, {message: 'Lastname length must be less then 20'})
-    readonly lastname: string;
+    readonly lastname?: string;
 }

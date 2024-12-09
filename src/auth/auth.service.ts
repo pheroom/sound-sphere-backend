@@ -8,6 +8,7 @@ import {LoginArtistDto} from "../artists/dto/login-artist.dto";
 import {CreateArtistDto} from "../artists/dto/create-artist.dto";
 import {ArtistsService} from "../artists/artists.service";
 import {Artist} from "../artists/artists.model";
+import {User} from "../users/users.model";
 
 @Injectable()
 export class AuthService {
@@ -31,7 +32,8 @@ export class AuthService {
     }
 
     private async generateToken(user: {id: number, username: string}) {
-        const payload = {username: user.username, id: user.id, isArtist: user instanceof Artist};
+        const who = user instanceof User ? 'user' : 'artist';
+        const payload = {username: user.username, id: user.id, who};
         return {
             token: this.jwtService.sign(payload)
         }

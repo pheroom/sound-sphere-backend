@@ -16,6 +16,7 @@ import {FileInterceptor} from "@nestjs/platform-express";
 import {Artist} from "../artists/artists.model";
 import {Album} from "../albums/albums.model";
 import {Track} from "../tracks/tracks.model";
+import {Playlist} from "../playlists/playlist.model";
 
 @Controller('users')
 export class UsersController {
@@ -23,9 +24,9 @@ export class UsersController {
 
     @ApiOperation({summary: 'Get all users'})
     @ApiResponse({status: 200, type: [User]})
-    @Get()
+    @Get('all')
     getAll(@Query('query') query: string, @Query('limit') limit: number, @Query('page') page: number) {
-        return this.usersService.getAllUsers(limit, page)
+        return this.usersService.getAllUsers(limit, page, query)
     }
 
     @ApiOperation({summary: 'Get user profile by username'})
@@ -126,5 +127,41 @@ export class UsersController {
     @Get('favourite-tracks/:userId')
     getFavouriteTracks(@Param('userId') userId: number, @Query('limit') limit: number, @Query('page') page: number){
         return this.usersService.getFavouriteTracksByUserId(userId, limit, page)
+    }
+
+    @ApiOperation({summary: 'Get created playlists by user id'})
+    @ApiResponse({status: 200, type: [Playlist]})
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Get('playlists/:userId')
+    getAlbumsByArtistId(@Param('userId') userId: number, @Query('limit') limit: number, @Query('page') page: number) {
+        return this.usersService.getPlaylistsByUserId(userId, limit, page);
+    }
+
+    @ApiOperation({summary: 'Add playlist to favourites'})
+    @ApiResponse({status: 200})
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Post('favourite-playlists/:playlistId')
+    favouritePlaylist(@Req() req, @Param('playlistId') playlistId: number){
+        return this.usersService.favouritePlaylist(+req.user.id, playlistId)
+    }
+
+    @ApiOperation({summary: 'Remove playlist from favourites'})
+    @ApiResponse({status: 200})
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Delete('favourite-playlists/:playlistId')
+    unfavouritePlaylist(@Req() req, @Param('playlistId') playlistId: number){
+        return this.usersService.unfavouritePlaylist(+req.user.id, playlistId)
+    }
+
+    @ApiOperation({summary: 'Get favourites playlist by user Id'})
+    @ApiResponse({status: 200, type: [Playlist]})
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Get('favourite-playlists/:userId')
+    getFavouritePlaylists(@Param('userId') userId: number, @Query('limit') limit: number, @Query('page') page: number){
+        return this.usersService.getFavouritePlaylistsByUserId(userId, limit, page)
     }
 }

@@ -41,13 +41,22 @@ export class AlbumsController {
         return this.albumService.getAllAlbums(limit, page, query);
     }
 
+    @ApiOperation({summary: 'Get album with tracks by auth artist'})
+    @ApiResponse({status: 200, type: Album})
+    @ApiBearerAuth()
+    @UseGuards(JwtArtistsAuthGuard)
+    @Get('artist-with-tracks/:albumId')
+    getArtistAlbumWithTracks(@Req() req, @Param('albumId') albumId: number) {
+        return this.albumService.getAlbumWithTracksById(+req.artist.id, albumId);
+    }
+
     @ApiOperation({summary: 'Get album with tracks'})
     @ApiResponse({status: 200, type: Album})
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('with-tracks/:albumId')
     getAlbumWithTracks(@Param('albumId') albumId: number) {
-        return this.albumService.getAlbumWithTracksById(albumId);
+        return this.albumService.getAlbumWithTracksById(null, albumId);
     }
 
     @ApiOperation({summary: 'Update album'})

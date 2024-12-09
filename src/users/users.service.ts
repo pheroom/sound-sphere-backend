@@ -14,7 +14,9 @@ import {UserFavouriteTracks} from "./user-favourite-tracks.model";
 import {TracksService} from "../tracks/tracks.service";
 import {Track} from "../tracks/tracks.model";
 import {Op} from "sequelize";
-import {TrackArtists} from "../tracks/track-artists.model";
+import {Playlist} from "../playlists/playlist.model";
+import {UserFavouritePlaylists} from "./user-favourite-playlists.model";
+import {PlaylistsService} from "../playlists/playlists.service";
 
 @Injectable({ scope: Scope.REQUEST })
 export class UsersService {
@@ -22,9 +24,11 @@ export class UsersService {
                 @InjectModel(UserBlockedArtists) private userBlockedArtistsRepository: typeof UserBlockedArtists,
                 @InjectModel(UserFavouriteAlbums) private userFavouriteAlbumsRepository: typeof UserFavouriteAlbums,
                 @InjectModel(UserFavouriteTracks) private userFavouriteTracksRepository: typeof UserFavouriteTracks,
+                @InjectModel(UserFavouritePlaylists) private userFavouritePlaylistsRepository: typeof UserFavouritePlaylists,
                 private filesService: FilesService,
                 private albumsService: AlbumsService,
                 private tracksService: TracksService,
+                private playlistService: PlaylistsService,
                 private artistsService: ArtistsService) {}
 
     async createUser(dto: CreateUserDto) {
@@ -96,6 +100,7 @@ export class UsersService {
     async getBlockedArtistsByUserId(userId: number, limit = 10, page = 1){
         const offset = (page - 1) * limit;
         const user = await this.userRepository.findByPk(userId, {
+            subQuery: false,
             include: [{
                 model: Artist,
                 through: {attributes: []},
@@ -104,7 +109,7 @@ export class UsersService {
             offset,
             order: [[{model: Artist, as: 'blockedArtists'}, UserBlockedArtists, 'createdAt', 'desc']]
         });
-        return user.blockedArtists
+        return user?.blockedArtists || []
     }
 
     async favouriteAlbum(userId: number, albumId: number){
@@ -128,6 +133,7 @@ export class UsersService {
     async getFavouriteAlbumsByUserId(userId: number, limit = 10, page = 1){
         const offset = (page - 1) * limit;
         const user = await this.userRepository.findByPk(userId, {
+            subQuery: false,
             include: [{
                 model: Album,
                 through: {attributes: []},
@@ -164,6 +170,7 @@ export class UsersService {
     async getFavouriteTracksByUserId(userId: number, limit = 10, page = 1){
         const offset = (page - 1) * limit;
         const user = await this.userRepository.findByPk(userId, {
+            subQuery: false,
             include: [{
                 model: Track,
                 through: {attributes: []},
@@ -177,5 +184,60 @@ export class UsersService {
             order: [[{model: Track, as: 'favouriteTracks'}, UserFavouriteTracks, 'createdAt', 'desc']]
         });
         return user?.favouriteTracks || []
+    }
+
+    async getPlaylistsByUserId(userId: number, limit = 10, page = 1) {
+        const offset = (page - 1) * limit;
+        const user = await this.userRepository.findByPk(userId, {
+            subQuery: false,
+            include: {
+                model: Playlist,
+                as: 'playlists',
+            },
+            limit,
+            offset,
+            order: [[{model: Playlist, as: 'playlists'}, 'createdAt', 'desc']]
+        })
+        return user?.playlists || []
+    }
+
+    async favouritePlaylist(userId: number, playlistId: number){
+        console.log(userId, playlistId)
+        const user = await this.userRepository.findByPk(userId);
+        const playlist = await this.playlistService.getPlaylistById(playlistId);
+        if (!playlist || !user) {
+            throw new NotFoundException('Playlist not found');
+        }
+        await user.$add('favouritePlaylists', playlistId)
+        // await this.userFavouritePlaylistsRepository.create({userId: user.id, playlistId});
+        return
+    }
+
+    async unfavouritePlaylist(userId: number, playlistId: number){
+        const result = await this.userFavouritePlaylistsRepository.destroy({where: {userId, playlistId}})
+        if (result === 0) {
+            throw new NotFoundException('Playlist not found in favourites list');
+        }
+        return
+    }
+
+    async getFavouritePlaylistsByUserId(userId: number, limit = 10, page = 1){
+        const offset = (page - 1) * limit;
+        const user = await this.userRepository.findByPk(userId, {
+            subQuery: false,
+            include: [{
+                model: Playlist,
+                as: 'favouritePlaylists',
+                through: {attributes: []},
+                include: [{
+                    model: User,
+                    as: 'user'
+                }]
+            }],
+            limit,
+            offset,
+            order: [[{model: Playlist, as: 'favouritePlaylists'}, UserFavouritePlaylists, 'createdAt', 'desc']]
+        });
+        return user?.favouritePlaylists || []
     }
 }

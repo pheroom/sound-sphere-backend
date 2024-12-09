@@ -1,4 +1,4 @@
-import {BelongsToMany, Column, DataType, DefaultScope, Model, Scopes, Table} from "sequelize-typescript";
+import {BelongsToMany, Column, DataType, DefaultScope, HasMany, Model, Scopes, Table} from "sequelize-typescript";
 import {ApiProperty} from "@nestjs/swagger";
 import {Artist} from "../artists/artists.model";
 import {UserBlockedArtists} from "./user-blocked-artists.model";
@@ -6,6 +6,8 @@ import {UserFavouriteAlbums} from "./user-favourite-albums.model";
 import {Album} from "../albums/albums.model";
 import {Track} from "../tracks/tracks.model";
 import {UserFavouriteTracks} from "./user-favourite-tracks.model";
+import {Playlist} from "../playlists/playlist.model";
+import {UserFavouritePlaylists} from "./user-favourite-playlists.model";
 
 interface UserCreationAttrs{
     username:string;
@@ -52,6 +54,9 @@ export class User extends Model<User, UserCreationAttrs> {
     @Column({type: DataType.STRING, defaultValue: ''})
     avatarURL: string
 
+    @HasMany(() => Playlist)
+    playlists: Playlist[];
+
     @BelongsToMany(() => Artist, () => UserBlockedArtists)
     blockedArtists: Artist[]
 
@@ -60,4 +65,7 @@ export class User extends Model<User, UserCreationAttrs> {
 
     @BelongsToMany(() => Track, () => UserFavouriteTracks)
     favouriteTracks: Track[]
+
+    @BelongsToMany(() => Playlist, () => UserFavouritePlaylists)
+    favouritePlaylists: Playlist[]
 }

@@ -5,6 +5,8 @@ import {User} from "../users/users.model";
 import {Album} from "../albums/albums.model";
 import {TrackArtists} from "./track-artists.model";
 import {UserFavouriteTracks} from "../users/user-favourite-tracks.model";
+import {PlaylistTracks} from "../playlists/playlist-tracks.model";
+import {Playlist} from "../playlists/playlist.model";
 
 interface TrackCreationAttrs{
     name: string;
@@ -45,4 +47,7 @@ export class Track extends Model<Track, TrackCreationAttrs> {
 
     @BelongsToMany(() => User, () => UserFavouriteTracks)
     favouriteOfUsers: User[]
+
+    @BelongsToMany(() => Playlist, () => PlaylistTracks)
+    playlists: Playlist[]
 }

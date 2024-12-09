@@ -55,8 +55,8 @@ export class ArtistsController {
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('albums/:artistId')
-    getAlbumsByArtistId(@Param('artistId') artistId: string) {
-        return this.artistsService.getAlbumsByArtistId(+artistId);
+    getAlbumsByArtistId(@Param('artistId') artistId: string, @Query('limit') limit: number, @Query('page') page: number) {
+        return this.artistsService.getAlbumsByArtistId(+artistId, limit, page);
     }
 
     @ApiOperation({summary: 'Get albums created by auth artist'})
@@ -64,7 +64,7 @@ export class ArtistsController {
     @ApiBearerAuth()
     @UseGuards(JwtArtistsAuthGuard)
     @Get('created-albums')
-    getArtistAlbums(@Req() req) {
-        return this.artistsService.getAlbumsByArtistId(+req.artist.id);
+    getArtistAlbums(@Req() req, @Query('limit') limit: number, @Query('page') page: number) {
+        return this.artistsService.getAlbumsByArtistId(+req.artist.id, limit, page);
     }
 }

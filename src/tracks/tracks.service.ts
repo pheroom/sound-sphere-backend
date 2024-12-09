@@ -18,20 +18,15 @@ export class TracksService {
                 private albumsService: AlbumsService,) {}
 
     async create(artistId: number, dto: TrackDto, picture, audio) {
-        if(!dto.number || Number.isNaN(Number(dto.number)) || dto.number <  1) {
-            throw new NotFoundException("Track number must be a number");
-        }
         const album = await this.albumsService.getAlbumById(dto.albumId);
         if(!album) {
             throw new NotFoundException("No albums found")
         }
-        const candidate = await this.trackRepository.findOne({where: {albumId: dto.albumId, number: dto.number}});
-        if(candidate) {
-            throw new BadRequestException("Track with this number already exists in this album")
-        }
+        const albumTracks = await this.trackRepository.findAll({ where: { albumId: dto.albumId } });
+        const number = albumTracks.length + 1
         const pictureURL = picture ? await this.filesService.createFile(FileTypes.IMAGE, picture) : ''
         const audioURL = audio ? await this.filesService.createFile(FileTypes.AUDIO, audio) : ''
-        const track = await this.trackRepository.create({...dto, pictureURL, audioURL});
+        const track = await this.trackRepository.create({...dto, pictureURL, audioURL, number});
         await track.$add('artists', artistId)
         return track;
     }
@@ -74,19 +69,32 @@ export class TracksService {
     }
 
     async deleteTrack(artistId: number, trackId: number) {
-        const owning = this.trackArtistsRepository.findOne({where: {trackId, artistId}});
+        const owning = await this.trackArtistsRepository.findOne({where: {trackId, artistId}});
         if(!owning) {
             throw new NotFoundException("You can't delete other people's tracks")
         }
+        const {albumId} = await this.trackRepository.findByPk(trackId)
         const result = await this.trackRepository.destroy({where: {id: trackId}})
-        if (result === 0) {
+        if (!albumId || result === 0) {
             throw new NotFoundException('Track not found');
         }
+        await this.reorderTracks(albumId)
         return
     }
 
+    async reorderTracks(albumId: number){
+        const albumTracks = await this.trackRepository.findAll({ where: { albumId }, order: [['number', 'asc']] });
+        let prevNumber = 0
+        for(let {id, number} of albumTracks){
+            if(number - 1 !== prevNumber){
+                await this.trackRepository.update({number: prevNumber + 1}, {where: {id}})
+            }
+            prevNumber++
+        }
+    }
+
     async addTrackArtist(authArtistId: number, trackId: number, artistId: number) {
-        const owning = this.trackArtistsRepository.findOne({where: {trackId, artistId: authArtistId}});
+        const owning = await this.trackArtistsRepository.findOne({where: {trackId, artistId: authArtistId}});
         if(!owning) {
             throw new NotFoundException("You can't manage other people's tracks")
         }
@@ -95,7 +103,7 @@ export class TracksService {
     }
 
     async removeTrackArtist(authArtistId: number, trackId: number, artistId: number) {
-        const owning = this.trackArtistsRepository.findOne({where: {trackId, artistId: authArtistId}});
+        const owning = await this.trackArtistsRepository.findOne({where: {trackId, artistId: authArtistId}});
         if(!owning) {
             throw new NotFoundException("You can't manage other people's tracks")
         }

@@ -12,12 +12,14 @@ import {FilesModule} from "../files/files.module";
 import {ArtistsModule} from "../artists/artists.module";
 import {AlbumsModule} from "../albums/albums.module";
 import {AuthModule} from "../auth/auth.module";
+import {PlaylistTracks} from "../playlists/playlist-tracks.model";
+import {Playlist} from "../playlists/playlist.model";
 
 @Module({
     providers: [TracksService],
     controllers: [TracksController],
     imports: [
-        SequelizeModule.forFeature([Artist, User, Album, TrackArtists, Track, UserFavouriteTracks]),
+        SequelizeModule.forFeature([Artist, User, Album, TrackArtists, Track, UserFavouriteTracks, PlaylistTracks, Playlist]),
         FilesModule,
         ArtistsModule,
         AlbumsModule,

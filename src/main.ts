@@ -1,7 +1,7 @@
 import * as process from "node:process";
 import {NestFactory} from "@nestjs/core";
 import {AppModule} from "./app.module";
-    import {DocumentBuilder, SwaggerModule} from "@nestjs/swagger";
+import {DocumentBuilder, SwaggerModule} from "@nestjs/swagger";
 import {BadRequestException, ValidationPipe} from "@nestjs/common";
 
 async function start(){

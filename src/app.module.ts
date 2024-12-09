@@ -19,6 +19,10 @@ import { TracksModule } from './tracks/tracks.module';
 import {Track} from "./tracks/tracks.model";
 import {TrackArtists} from "./tracks/track-artists.model";
 import {UserFavouriteTracks} from "./users/user-favourite-tracks.model";
+import { PlaylistsModule } from './playlists/playlists.module';
+import {Playlist} from "./playlists/playlist.model";
+import {UserFavouritePlaylists} from "./users/user-favourite-playlists.model";
+import {PlaylistTracks} from "./playlists/playlist-tracks.model";
 
 @Module({
     controllers: [],
@@ -38,7 +42,8 @@ import {UserFavouriteTracks} from "./users/user-favourite-tracks.model";
             password: process.env.POSTGRES_PASSWORD,
             database: process.env.POSTGRES_DB,
             autoLoadModels: true,
-            models: [User, Artist, UserBlockedArtists, Album, AlbumArtists, UserFavouriteAlbums, Track, TrackArtists, UserFavouriteTracks]
+            models: [User, Artist, UserBlockedArtists, Album, AlbumArtists, UserFavouriteAlbums, Track, TrackArtists,
+                UserFavouriteTracks, Playlist, UserFavouritePlaylists, PlaylistTracks]
         }),
         UsersModule,
         AuthModule,
@@ -46,6 +51,7 @@ import {UserFavouriteTracks} from "./users/user-favourite-tracks.model";
         FilesModule,
         AlbumsModule,
         TracksModule,
+        PlaylistsModule,
     ],
 })
 export class AppModule {}

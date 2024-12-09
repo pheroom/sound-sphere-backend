@@ -6,7 +6,6 @@ import {UpdateArtistDto} from "./dto/update-artist.dto";
 import {FilesService, FileTypes} from "../files/files.service";
 import {Album} from "../albums/albums.model";
 import {Op} from "sequelize";
-import {UserBlockedArtists} from "../users/user-blocked-artists.model";
 
 @Injectable()
 export class ArtistsService {
@@ -60,8 +59,10 @@ export class ArtistsService {
         return artist
     }
 
-    async getAlbumsByArtistId(artistId: number) {
+    async getAlbumsByArtistId(artistId: number, limit = 10, page = 1) {
+        const offset = (page - 1) * limit;
         const artist = await this.artistRepository.findByPk(artistId, {
+            subQuery: false,
             include: {
                 model: Album,
                 through: {attributes: []},
@@ -70,6 +71,8 @@ export class ArtistsService {
                     through: {attributes: []},
                 }]
             },
+            limit,
+            offset,
             order: [[{model: Album, as: 'albums'}, 'createdAt', 'desc']]
         })
         return artist?.albums || []

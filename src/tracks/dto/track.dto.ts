@@ -8,12 +8,5 @@ export class TrackDto {
     readonly name: string;
 
     @ApiProperty({example: 1})
-    // @IsInt({message: 'Album Id must be integer'})
-    // @Min(1, { message: 'Album Id must be at least 1' })
     readonly albumId: number;
-
-    @ApiProperty({example: 1})
-    // @IsInt({message: 'Track number must be integer'})
-    // @Min(1, { message: 'Track number must be at least 1' })
-    readonly number: number;
 }

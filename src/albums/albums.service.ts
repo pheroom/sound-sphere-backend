@@ -43,7 +43,20 @@ export class AlbumsService {
         return album;
     }
 
-    async getAlbumWithTracksById(albumId: number) {
+    async getAlbumWithTracksById(artistId: number, albumId: number) {
+        const checkAlbum = await this.albumRepository.findByPk(albumId);
+        if(!checkAlbum){
+            throw new NotFoundException("No album found")
+        }
+        if(checkAlbum.isPrivate) {
+            if(!artistId) {
+                throw new NotFoundException("You can't view private albums")
+            }
+            const owning = this.albumArtistsRepository.findOne({where: {albumId, artistId}});
+            if(!owning) {
+                throw new NotFoundException("You can't view private albums")
+            }
+        }
         const album = await this.albumRepository.findByPk(albumId, {
             include: [{
                 model: Artist,
@@ -57,9 +70,6 @@ export class AlbumsService {
                 }]
             }],
         });
-        if(!album){
-            throw new NotFoundException("No album found")
-        }
         return album;
     }
 
