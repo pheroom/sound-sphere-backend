@@ -23,10 +23,8 @@ async function start(){
     // app.setGlobalPrefix('api')
     app.useGlobalPipes(new ValidationPipe({
         exceptionFactory: (errors) => {
-            const result = errors.map((error) => ({
-                property: error.property,
-                message: error.constraints[Object.keys(error.constraints)[0]],
-            }));
+            const result = errors
+                .map((error) => error.constraints[Object.keys(error.constraints)[0]]).join('. ')
             return new BadRequestException(result);
         },
         stopAtFirstError: true,

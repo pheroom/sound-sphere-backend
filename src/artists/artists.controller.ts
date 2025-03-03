@@ -19,6 +19,7 @@ import {JwtAuthGuard} from "../auth/jwt-auth.guard";
 import {JwtArtistsAuthGuard} from "../auth/jwt-artists-auth.guard";
 import {UpdateArtistDto} from "./dto/update-artist.dto";
 import {Album} from "../albums/albums.model";
+import {User} from "../users/users.model";
 
 @Controller('artists')
 export class ArtistsController {
@@ -33,11 +34,25 @@ export class ArtistsController {
 
     @ApiOperation({summary: 'Get artist profile by username'})
     @ApiResponse({status: 200, type: Artist})
-    @ApiBearerAuth()
-    @UseGuards(JwtAuthGuard)
     @Get('get-one-by-username/:username')
     getArtistByUsername(@Param('username') username: string) {
         return this.artistsService.getArtistByUsername(username)
+    }
+
+    @ApiOperation({summary: 'Get artist profile by id'})
+    @ApiResponse({status: 200, type: Artist})
+    @Get('get-one-by-id/:id')
+    getArtistById(@Param('id') id: number) {
+        return this.artistsService.getArtistById(id)
+    }
+
+    @ApiOperation({summary: 'Get artist profile by jwt token'})
+    @ApiResponse({status: 200, type: Artist})
+    @ApiBearerAuth()
+    @UseGuards(JwtArtistsAuthGuard)
+    @Get('get-one-by-token')
+    getArtistByToken(@Req() req) {
+        return this.artistsService.getArtistById(+req.artist.id)
     }
 
     @ApiOperation({summary: 'Update artist profile'})
@@ -55,8 +70,8 @@ export class ArtistsController {
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('albums/:artistId')
-    getAlbumsByArtistId(@Param('artistId') artistId: string, @Query('limit') limit: number, @Query('page') page: number) {
-        return this.artistsService.getAlbumsByArtistId(+artistId, limit, page);
+    getAlbumsByArtistId(@Req() req, @Param('artistId') artistId: string, @Query('limit') limit: number, @Query('page') page: number) {
+        return this.artistsService.getAlbumsByArtistId(+req.user.id, +artistId, limit, page);
     }
 
     @ApiOperation({summary: 'Get albums created by auth artist'})
@@ -65,6 +80,6 @@ export class ArtistsController {
     @UseGuards(JwtArtistsAuthGuard)
     @Get('created-albums')
     getArtistAlbums(@Req() req, @Query('limit') limit: number, @Query('page') page: number) {
-        return this.artistsService.getAlbumsByArtistId(+req.artist.id, limit, page);
+        return this.artistsService.getAlbumsByAuthArtist(+req.artist.id, limit, page);
     }
 }

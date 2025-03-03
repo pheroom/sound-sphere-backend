@@ -8,20 +8,25 @@ import {Artist} from "../artists/artists.model";
 import {UpdateAlbumDto} from "./dto/update-album.dto";
 import {Track} from "../tracks/tracks.model";
 import {Op} from "sequelize";
+import {TracksService} from "../tracks/tracks.service";
+import {modelToWithIsFavourite} from "../modelToWithIsFavourite";
+import {User} from "../users/users.model";
 
 @Injectable()
 export class AlbumsService {
     constructor(@InjectModel(Album) private albumRepository: typeof Album,
                 @InjectModel(AlbumArtists) private albumArtistsRepository: typeof AlbumArtists,
-                private filesService: FilesService) {}
+                // private tracksService: TracksService,
+                private filesService: FilesService,) {}
 
-    async create(dto: AlbumDto, artistId: number) {
-        const album = await this.albumRepository.create(dto);
+    async create(dto: AlbumDto, artistId: number, picture) {
+        const pictureURL = picture ? await this.filesService.createFile(FileTypes.IMAGE, picture) : ''
+        const album = await this.albumRepository.create({...dto, pictureURL});
         await album.$add('artists', artistId)
         return album;
     }
 
-    async getAllAlbums(limit = 10, page = 1, query = '') {
+    async getAllAlbums(userId: number, limit = 10, page = 1, query = '') {
         const offset = (page - 1) * limit;
         const albums = await this.albumRepository.findAll({
             where: {
@@ -31,16 +36,27 @@ export class AlbumsService {
             include: [{
                 model: Artist,
                 through: {attributes: []}
+            }, {
+                model: User,
+                where: {id: {[Op.eq]: userId}},
+                through: {attributes: []},
+                attributes: ['id'],
+                required: false,
             }],
             limit,
             offset
         });
-        return albums;
+        return albums.map(modelToWithIsFavourite);
     }
 
     async getAlbumById(albumId: number) {
         const album = await this.albumRepository.findByPk(albumId);
         return album;
+    }
+
+    async checkAlbumOwning(artistId: number, albumId: number) {
+        const owning = this.albumArtistsRepository.findOne({where: {albumId, artistId}});
+        return !!owning
     }
 
     async getAlbumWithTracksById(artistId: number, albumId: number) {
@@ -73,6 +89,41 @@ export class AlbumsService {
         return album;
     }
 
+    async getPublicAlbumWithTracksById(userId: number, albumId: number) {
+        const checkAlbum = await this.albumRepository.findByPk(albumId);
+        if(!checkAlbum){
+            throw new NotFoundException("No album found")
+        }
+        const album = await this.albumRepository.findByPk(albumId, {
+            include: [{
+                model: Artist,
+                through: {attributes: []},
+            },{
+                model: Track,
+                include: [{
+                    model: Artist,
+                    through: {attributes: []},
+                    order: [['name', 'DESC']]
+                }, {
+                    model: User,
+                    where: {id: {[Op.eq]: userId}},
+                    through: {attributes: []},
+                    attributes: ['id'],
+                    required: false,
+                }]
+            }, {
+                model: User,
+                where: {id: {[Op.eq]: userId}},
+                through: {attributes: []},
+                attributes: ['id'],
+                required: false,
+            }],
+        });
+        const resAlbum = modelToWithIsFavourite(album)
+        resAlbum.tracks = resAlbum.tracks.map(modelToWithIsFavourite)
+        return resAlbum;
+    }
+
     async updateAlbum(artistId: number, albumId: number, dto: UpdateAlbumDto, image) {
         class Updates extends UpdateAlbumDto{
             pictureURL?: string
@@ -86,6 +137,9 @@ export class AlbumsService {
             updates.pictureURL = await this.filesService.createFile(FileTypes.IMAGE, image)
         }
         const [_, [updatedAlbum]] = await this.albumRepository.update(updates, { where: { id: albumId }, returning: true });
+        // if(image){
+            // await this.tracksService.updateTracksPicture(albumId, updates.pictureURL);
+        // }
         return updatedAlbum
     }
 

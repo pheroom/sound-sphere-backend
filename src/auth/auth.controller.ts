@@ -10,7 +10,6 @@ import {CreateArtistDto} from "../artists/dto/create-artist.dto";
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
-
     @ApiOperation({summary: 'Login as user'})
     @ApiResponse({status: 200, type: String})
     @Post('/login')

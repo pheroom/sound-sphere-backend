@@ -32,7 +32,7 @@ import {PlaylistTracks} from "./playlists/playlist-tracks.model";
             envFilePath: `.${process.env.NODE_ENV}.env`,
         }),
         ServeStaticModule.forRoot({
-            rootPath: path.resolve(__dirname, 'static')
+            rootPath: path.resolve(__dirname, '..', 'static')
         }),
         SequelizeModule.forRoot({
             dialect: 'postgres',
@@ -41,6 +41,7 @@ import {PlaylistTracks} from "./playlists/playlist-tracks.model";
             username: process.env.POSTGRES_USER,
             password: process.env.POSTGRES_PASSWORD,
             database: process.env.POSTGRES_DB,
+            dialectOptions: process.env.POSTGRES_SLL_REQUIRED ? {ssl: {require: true}} : {},
             autoLoadModels: true,
             models: [User, Artist, UserBlockedArtists, Album, AlbumArtists, UserFavouriteAlbums, Track, TrackArtists,
                 UserFavouriteTracks, Playlist, UserFavouritePlaylists, PlaylistTracks]

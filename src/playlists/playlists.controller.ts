@@ -17,7 +17,6 @@ import {PlaylistDto} from "./dto/playlist.dto";
 import {Playlist} from "./playlist.model";
 import {JwtAuthGuard} from "../auth/jwt-auth.guard";
 import {UpdatePlaylistDto} from "./dto/update-playlist.dto";
-import {Album} from "../albums/albums.model";
 
 @Controller('playlists')
 export class PlaylistsController {
@@ -29,11 +28,11 @@ export class PlaylistsController {
     @UseGuards(JwtAuthGuard)
     @Post()
     @UseInterceptors(FileFieldsInterceptor([
-        {name: 'picture', maxCount: 1},
+        {name: 'image', maxCount: 1},
     ]))
     create(@Req() req, @Body() playlistDto: PlaylistDto, @UploadedFiles() files) {
-        const {picture} = files || {}
-        return this.playlistsService.create(+req.user.id, playlistDto, picture?.[0]);
+        const {image} = files || {}
+        return this.playlistsService.create(+req.user.id, playlistDto, image?.[0]);
     }
 
     @ApiOperation({summary: 'Get all playlists by query'})
@@ -45,11 +44,9 @@ export class PlaylistsController {
 
     @ApiOperation({summary: 'Get playlist with tracks'})
     @ApiResponse({status: 200, type: Playlist})
-    @ApiBearerAuth()
-    @UseGuards(JwtAuthGuard)
     @Get('with-tracks/:playlistId')
-    getAlbumWithTracks(@Req() req, @Param('playlistId') playlistId: number) {
-        return this.playlistsService.getPlaylistWithTracksById(+req.artist.id, playlistId);
+    getPlaylistWithTracks(@Req() req, @Param('playlistId') playlistId: number) {
+        return this.playlistsService.getPlaylistWithTracksById(+req?.user?.id, playlistId);
     }
 
     @ApiOperation({summary: 'Remove playlist'})
@@ -58,7 +55,7 @@ export class PlaylistsController {
     @UseGuards(JwtAuthGuard)
     @Delete(':playlistId')
     removePlaylist(@Req() req, @Param('playlistId') playlistId: number) {
-        return this.playlistsService.removePlaylistById(+req.artist.id, playlistId);
+        return this.playlistsService.removePlaylistById(+req.user.id, playlistId);
     }
 
     @ApiOperation({summary: 'Update playlist'})
@@ -75,7 +72,7 @@ export class PlaylistsController {
     @ApiResponse({status: 200})
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
-    @Post('tracks')
+    @Post('tracks/:playlistId/:trackId')
     addTrack(@Req() req, @Param('trackId') trackId: number, @Param('playlistId') playlistId: number) {
         return this.playlistsService.addTrack(+req.user.id, playlistId, trackId);
     }

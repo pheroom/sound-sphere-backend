@@ -29,13 +29,27 @@ export class UsersController {
         return this.usersService.getAllUsers(limit, page, query)
     }
 
+    @ApiOperation({summary: 'Get user profile by id'})
+    @ApiResponse({status: 200, type: User})
+    @Get('get-one-by-id/:id')
+    getUserById(@Param('id') id: number) {
+        return this.usersService.getUserById(id)
+    }
+
     @ApiOperation({summary: 'Get user profile by username'})
     @ApiResponse({status: 200, type: User})
-    @ApiBearerAuth()
-    @UseGuards(JwtAuthGuard)
     @Get('get-one-by-username/:username')
     getUserByUsername(@Param('username') username: string) {
         return this.usersService.getUserByUsername(username)
+    }
+
+    @ApiOperation({summary: 'Get user profile by jwt token'})
+    @ApiResponse({status: 200, type: User})
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Get('get-one-by-token')
+    getUserByToken(@Req() req) {
+        return this.usersService.getUserById(+req.user.id)
     }
 
     @ApiOperation({summary: 'Update user profile'})
@@ -98,8 +112,8 @@ export class UsersController {
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('favourite-albums/:userId')
-    getFavouriteAlbums(@Param('userId') userId: number, @Query('limit') limit: number, @Query('page') page: number){
-        return this.usersService.getFavouriteAlbumsByUserId(userId, limit, page)
+    getFavouriteAlbums(@Req() req, @Param('userId') userId: number, @Query('limit') limit: number, @Query('page') page: number){
+        return this.usersService.getFavouriteAlbumsByUserId(+req.user.id, userId, limit, page)
     }
 
     @ApiOperation({summary: 'Add track to favourites'})
@@ -125,8 +139,8 @@ export class UsersController {
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('favourite-tracks/:userId')
-    getFavouriteTracks(@Param('userId') userId: number, @Query('limit') limit: number, @Query('page') page: number){
-        return this.usersService.getFavouriteTracksByUserId(userId, limit, page)
+    getFavouriteTracks(@Req() req, @Param('userId') userId: number, @Query('limit') limit: number, @Query('page') page: number){
+        return this.usersService.getFavouriteTracksByUserId(+req?.user?.id, userId, limit, page)
     }
 
     @ApiOperation({summary: 'Get created playlists by user id'})
@@ -134,8 +148,8 @@ export class UsersController {
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('playlists/:userId')
-    getAlbumsByArtistId(@Param('userId') userId: number, @Query('limit') limit: number, @Query('page') page: number) {
-        return this.usersService.getPlaylistsByUserId(userId, limit, page);
+    getCreatedPlaylists(@Req() req, @Param('userId') userId: number, @Query('limit') limit: number, @Query('page') page: number) {
+        return this.usersService.getPlaylistsByUserId(+req?.user?.id, userId, limit, page);
     }
 
     @ApiOperation({summary: 'Add playlist to favourites'})
@@ -161,7 +175,7 @@ export class UsersController {
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('favourite-playlists/:userId')
-    getFavouritePlaylists(@Param('userId') userId: number, @Query('limit') limit: number, @Query('page') page: number){
-        return this.usersService.getFavouritePlaylistsByUserId(userId, limit, page)
+    getFavouritePlaylists(@Req() req, @Param('userId') userId: number, @Query('limit') limit: number, @Query('page') page: number){
+        return this.usersService.getFavouritePlaylistsByUserId(+req?.user?.id, userId, limit, page)
     }
 }

@@ -3,7 +3,6 @@
 ## About
 
 #### Link to the frontend: https://github.com/pheroom/sound-sphere
-#### Link to docs: https://sound-sphere-api.glitch.me/api/docs
 
 This music streaming service API provides a robust foundation for a full-featured music application, allowing artists to share their work and users to enjoy and organize their music preferences seamlessly.
 Users can register an account to access the platform's features.

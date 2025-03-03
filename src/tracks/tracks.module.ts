@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import {forwardRef, Module} from '@nestjs/common';
 import { TracksService } from './tracks.service';
 import { TracksController } from './tracks.controller';
 import {SequelizeModule} from "@nestjs/sequelize";
@@ -21,9 +21,9 @@ import {Playlist} from "../playlists/playlist.model";
     imports: [
         SequelizeModule.forFeature([Artist, User, Album, TrackArtists, Track, UserFavouriteTracks, PlaylistTracks, Playlist]),
         FilesModule,
-        ArtistsModule,
         AlbumsModule,
-        AuthModule
+        ArtistsModule,
+        AuthModule,
     ],
     exports: [
         TracksService,

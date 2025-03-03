@@ -11,6 +11,7 @@ import {User} from "../users/users.model";
 import {UserFavouriteAlbums} from "../users/user-favourite-albums.model";
 import {Track} from "../tracks/tracks.model";
 import {AuthModule} from "../auth/auth.module";
+import {TracksService} from "../tracks/tracks.service";
 
 @Module({
     controllers: [AlbumsController],

@@ -43,7 +43,7 @@ export class PlaylistsService {
         return playlist
     }
 
-    async getPlaylistWithTracksById(userId: number, playlistId: number) {
+    async getPlaylistWithTracksById(userId: number | undefined, playlistId: number) {
         const checkPlaylist = await this.playlistRepository.findByPk(playlistId);
         if(!checkPlaylist){
             throw new NotFoundException("No playlist found")

@@ -6,6 +6,8 @@ import {UpdateArtistDto} from "./dto/update-artist.dto";
 import {FilesService, FileTypes} from "../files/files.service";
 import {Album} from "../albums/albums.model";
 import {Op} from "sequelize";
+import {User} from "../users/users.model";
+import {modelToWithIsFavourite} from "../modelToWithIsFavourite";
 
 @Injectable()
 export class ArtistsService {
@@ -59,7 +61,33 @@ export class ArtistsService {
         return artist
     }
 
-    async getAlbumsByArtistId(artistId: number, limit = 10, page = 1) {
+    async getAlbumsByArtistId(userId: number, artistId: number, limit = 10, page = 1) {
+        const offset = (page - 1) * limit;
+        const artist = await this.artistRepository.findByPk(artistId, {
+            subQuery: false,
+            include: {
+                model: Album,
+                through: {attributes: []},
+                include: [{
+                    model: Artist,
+                    through: {attributes: []},
+                }, {
+                    model: User,
+                    where: {id: {[Op.eq]: userId}},
+                    through: {attributes: []},
+                    attributes: ['id'],
+                    required: false,
+                }]
+            },
+            limit,
+            offset,
+            order: [[{model: Album, as: 'albums'}, 'createdAt', 'desc']]
+        })
+        // @ts-ignore
+        return artist?.albums?.map(modelToWithIsFavourite) || []
+    }
+
+    async getAlbumsByAuthArtist(artistId: number, limit = 10, page = 1) {
         const offset = (page - 1) * limit;
         const artist = await this.artistRepository.findByPk(artistId, {
             subQuery: false,

@@ -17,6 +17,8 @@ import {Op} from "sequelize";
 import {Playlist} from "../playlists/playlist.model";
 import {UserFavouritePlaylists} from "./user-favourite-playlists.model";
 import {PlaylistsService} from "../playlists/playlists.service";
+import {isLogLevelEnabled} from "@nestjs/common/services/utils";
+import {modelToWithIsFavourite} from "../modelToWithIsFavourite";
 
 @Injectable({ scope: Scope.REQUEST })
 export class UsersService {
@@ -130,7 +132,7 @@ export class UsersService {
         return
     }
 
-    async getFavouriteAlbumsByUserId(userId: number, limit = 10, page = 1){
+    async getFavouriteAlbumsByUserId(authUserId: number, userId: number, limit = 10, page = 1){
         const offset = (page - 1) * limit;
         const user = await this.userRepository.findByPk(userId, {
             subQuery: false,
@@ -140,13 +142,19 @@ export class UsersService {
                 include: [{
                     model: Artist,
                     through: {attributes: []}
+                }, {
+                    model: User,
+                    where: {id: {[Op.eq]: authUserId}},
+                    through: {attributes: []},
+                    attributes: ['id'],
+                    required: false,
                 }]
             }],
             limit,
             offset,
             order: [[{model: Album, as: 'favouriteAlbums'}, UserFavouriteAlbums, 'createdAt', 'desc']]
         });
-        return user?.favouriteAlbums || []
+        return user?.favouriteAlbums?.map?.(modelToWithIsFavourite) || []
     }
 
     async favouriteTrack(userId: number, trackId: number){
@@ -167,7 +175,7 @@ export class UsersService {
         return
     }
 
-    async getFavouriteTracksByUserId(userId: number, limit = 10, page = 1){
+    async getFavouriteTracksByUserId(authUserId: number, userId: number, limit = 10, page = 1){
         const offset = (page - 1) * limit;
         const user = await this.userRepository.findByPk(userId, {
             subQuery: false,
@@ -177,16 +185,22 @@ export class UsersService {
                 include: [{
                     model: Artist,
                     through: {attributes: []}
+                }, {
+                    model: User,
+                    where: {id: {[Op.eq]: authUserId}},
+                    through: {attributes: []},
+                    attributes: ['id'],
+                    required: false,
                 }]
             }],
             limit,
             offset,
             order: [[{model: Track, as: 'favouriteTracks'}, UserFavouriteTracks, 'createdAt', 'desc']]
         });
-        return user?.favouriteTracks || []
+        return user?.favouriteTracks?.map?.(modelToWithIsFavourite) || []
     }
 
-    async getPlaylistsByUserId(userId: number, limit = 10, page = 1) {
+    async getPlaylistsByUserId(authUserId: number, userId: number, limit = 10, page = 1) {
         const offset = (page - 1) * limit;
         const user = await this.userRepository.findByPk(userId, {
             subQuery: false,
@@ -202,7 +216,6 @@ export class UsersService {
     }
 
     async favouritePlaylist(userId: number, playlistId: number){
-        console.log(userId, playlistId)
         const user = await this.userRepository.findByPk(userId);
         const playlist = await this.playlistService.getPlaylistById(playlistId);
         if (!playlist || !user) {
@@ -221,7 +234,7 @@ export class UsersService {
         return
     }
 
-    async getFavouritePlaylistsByUserId(userId: number, limit = 10, page = 1){
+    async getFavouritePlaylistsByUserId(authUserId: number, userId: number, limit = 10, page = 1){
         const offset = (page - 1) * limit;
         const user = await this.userRepository.findByPk(userId, {
             subQuery: false,

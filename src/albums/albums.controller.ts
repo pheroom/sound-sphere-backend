@@ -29,16 +29,18 @@ export class AlbumsController {
     @ApiBearerAuth()
     @UseGuards(JwtArtistsAuthGuard)
     @Post()
-    create(@Req() req, @Body() albumDto: AlbumDto) {
-        return this.albumService.create(albumDto, +req.artist.id);
+    @UseInterceptors(FileInterceptor('image'))
+    create(@Req() req, @Body() albumDto: AlbumDto, @UploadedFile() image) {
+        return this.albumService.create(albumDto, +req.artist.id, image);
     }
 
     @ApiOperation({summary: 'Get all album by query'})
     @ApiResponse({status: 200, type: [Album]})
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('all')
-    getAll(@Query('query') query: string, @Query('limit') limit: number, @Query('page') page: number) {
-        return this.albumService.getAllAlbums(limit, page, query);
+    getAll(@Req() req, @Query('query') query: string, @Query('limit') limit: number, @Query('page') page: number) {
+        return this.albumService.getAllAlbums(+req.user.id, limit, page, query);
     }
 
     @ApiOperation({summary: 'Get album with tracks by auth artist'})
@@ -55,8 +57,8 @@ export class AlbumsController {
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('with-tracks/:albumId')
-    getAlbumWithTracks(@Param('albumId') albumId: number) {
-        return this.albumService.getAlbumWithTracksById(null, albumId);
+    getAlbumWithTracks(@Req() req, @Param('albumId') albumId: number) {
+        return this.albumService.getPublicAlbumWithTracksById(+req.user.id, albumId);
     }
 
     @ApiOperation({summary: 'Update album'})

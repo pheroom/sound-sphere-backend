@@ -1,14 +1,15 @@
 import {BadRequestException, Injectable, NotFoundException} from '@nestjs/common';
 import {InjectModel} from "@nestjs/sequelize";
 import {FilesService, FileTypes} from "../files/files.service";
-import {ArtistsService} from "../artists/artists.service";
 import {Artist} from "../artists/artists.model";
 import {Track} from "./tracks.model";
 import {TrackArtists} from "./track-artists.model";
 import {TrackDto} from "./dto/track.dto";
 import {AlbumsService} from "../albums/albums.service";
 import {UpdateTrackDto} from "./dto/update-track.dto";
-import {Op} from "sequelize";
+import sequelize, {Op} from "sequelize";
+import {User} from "../users/users.model";
+import {modelToWithIsFavourite} from "../modelToWithIsFavourite";
 
 @Injectable()
 export class TracksService {
@@ -17,55 +18,77 @@ export class TracksService {
                 private filesService: FilesService,
                 private albumsService: AlbumsService,) {}
 
-    async create(artistId: number, dto: TrackDto, picture, audio) {
+    async create(artistId: number, dto: TrackDto, audio) {
         const album = await this.albumsService.getAlbumById(dto.albumId);
         if(!album) {
             throw new NotFoundException("No albums found")
         }
+        if(!(await this.albumsService.checkAlbumOwning(dto.albumId, artistId))) {
+            throw new NotFoundException("You can't manage other people's albums")
+        }
         const albumTracks = await this.trackRepository.findAll({ where: { albumId: dto.albumId } });
         const number = albumTracks.length + 1
-        const pictureURL = picture ? await this.filesService.createFile(FileTypes.IMAGE, picture) : ''
         const audioURL = audio ? await this.filesService.createFile(FileTypes.AUDIO, audio) : ''
-        const track = await this.trackRepository.create({...dto, pictureURL, audioURL, number});
+        const track = await this.trackRepository.create({...dto, audioURL, number, pictureURL: album.pictureURL});
         await track.$add('artists', artistId)
         return track;
     }
 
-    async getAllTracks(limit = 10, page = 1, query = '') {
+    async getAllTracks(userId: number, limit = 10, page = 1, query = '') {
         const offset = (page - 1) * limit;
         const tracks = await this.trackRepository.findAll({
             where: {
                 name: {[Op.iLike]: `%${query}%`},
             },
+            order: [['createdAt', 'desc']],
             include: [{
                 model: Artist,
                 through: {attributes: []}
+            }, {
+                model: User,
+                where: {id: {[Op.eq]: userId}},
+                through: {attributes: []},
+                attributes: ['id'],
+                required: false,
             }],
             limit,
             offset
         });
-        return tracks;
+        return tracks.map(modelToWithIsFavourite);
     }
 
     async getTrackById(trackId: number) {
-        const track = await this.trackRepository.findByPk(trackId)
+        const track = await this.trackRepository.findByPk(trackId, {
+            include: [{
+                model: Artist,
+                through: {attributes: []}
+            }],
+        })
+        if (!track) {
+            throw new NotFoundException('Track not found');
+        }
         return track;
     }
 
-    async updateTrack(artistId: number, trackId: number, dto: UpdateTrackDto, image) {
+    async updateTrack(artistId: number, trackId: number, dto: UpdateTrackDto, auido) {
         class Updates extends UpdateTrackDto{
-            pictureURL?: string
+            audioURL?: string
         }
         const updates: Updates = {...dto}
         const owning = this.trackArtistsRepository.findOne({where: {trackId, artistId}});
         if(!owning) {
             throw new NotFoundException("You can't change other people's tracks")
         }
-        if(image){
-            updates.pictureURL = await this.filesService.createFile(FileTypes.IMAGE, image)
+        if(auido){
+            updates.audioURL = await this.filesService.createFile(FileTypes.AUDIO, auido)
         }
         const [_, [updatedTrack]] = await this.trackRepository.update(updates, { where: { id: trackId }, returning: true });
         return updatedTrack
+    }
+
+    async updateTracksPicture(albumId: number, pictureURL: string) {
+        const res = await this.trackRepository.update({pictureURL}, { where: { albumId }, returning: true });
+        console.log(res)
     }
 
     async deleteTrack(artistId: number, trackId: number) {

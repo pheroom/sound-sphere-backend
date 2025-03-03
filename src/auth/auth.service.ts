@@ -7,7 +7,6 @@ import * as bcrypt from 'bcryptjs'
 import {LoginArtistDto} from "../artists/dto/login-artist.dto";
 import {CreateArtistDto} from "../artists/dto/create-artist.dto";
 import {ArtistsService} from "../artists/artists.service";
-import {Artist} from "../artists/artists.model";
 import {User} from "../users/users.model";
 
 @Injectable()
@@ -16,9 +15,16 @@ export class AuthService {
                 private artistsService: ArtistsService,
                 private jwtService: JwtService) {}
 
+    private async generateToken(user: {id: number, username: string}) {
+        const who = user instanceof User ? 'user' : 'artist';
+        const payload = {username: user.username, id: user.id, who};
+        return this.jwtService.sign(payload)
+    }
+
     async login(userDto: LoginUserDto) {
         const user = await this.validateUser(userDto)
-        return this.generateToken(user)
+        const token = await this.generateToken(user)
+        return {token, user}
     }
 
     async registration(userDto: CreateUserDto) {
@@ -28,15 +34,8 @@ export class AuthService {
         }
         const hashPassword = await bcrypt.hash(userDto.password, 6);
         const user = await this.userService.createUser({...userDto, password: hashPassword});
-        return this.generateToken(user)
-    }
-
-    private async generateToken(user: {id: number, username: string}) {
-        const who = user instanceof User ? 'user' : 'artist';
-        const payload = {username: user.username, id: user.id, who};
-        return {
-            token: this.jwtService.sign(payload)
-        }
+        const token = await this.generateToken(user)
+        return {token, user}
     }
 
     private async validateUser(userDto: LoginUserDto) {
@@ -53,7 +52,8 @@ export class AuthService {
 
     async artistLogin(artistDto: LoginArtistDto) {
         const artist = await this.validateArtist(artistDto)
-        return this.generateToken(artist)
+        const token = await this.generateToken(artist)
+        return {token, artist}
     }
 
     async artistRegistration(artistDto: CreateArtistDto) {
@@ -63,7 +63,8 @@ export class AuthService {
         }
         const hashPassword = await bcrypt.hash(artistDto.password, 6);
         const artist = await this.artistsService.createArtist({...artistDto, password: hashPassword});
-        return this.generateToken(artist)
+        const token = await this.generateToken(artist)
+        return {token, artist}
     }
 
     private async validateArtist(artistDto: LoginArtistDto) {
